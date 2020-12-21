@@ -17,5 +17,5 @@ if cross_val:
     model_name = f'resize_cv_{loss_name}_{size}_{bs}_{epochs}'
 else:
     model_name = f'{prefix}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index}'
-step_size = int(size*0.75)
+step_size = int(size*0.5)
 
