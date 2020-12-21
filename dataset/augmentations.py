@@ -1,4 +1,5 @@
 import albumentations as albu
+import cv2
 from config import size_after_reshape
 ALBUMENTATIONS_VAL = albu.Compose([albu.Resize(size_after_reshape, size_after_reshape)])
 

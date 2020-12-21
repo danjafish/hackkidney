@@ -2,6 +2,7 @@ from torch.utils.data.sampler import Sampler
 from torch.utils.data import Dataset, DataLoader
 from dataset.augmentations import ALBUMENTATIONS_TRAIN, ALBUMENTATIONS_VAL
 import numpy as np
+import cv2
 
 from torch.utils.data import Dataset, DataLoader
 

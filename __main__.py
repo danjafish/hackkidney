@@ -18,7 +18,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = '0'
     print('Start data preparation')
     seed_everything(2020)
-    !mkdir "$model_name"
+    os.system(f"mkdir ../{model_name}")
     data_path = '/home/data/Kidney/data/'
     data = pd.read_csv(data_path + 'train.csv')
     X_images = []

@@ -8,7 +8,7 @@ from torch.optim.optimizer import Optimizer, required
 import os
 import random
 from PIL import Image, ImageDraw
-%pylab inline
+import matplotlib
 
 
 def mask_from_keys_and_preds(keys, masks, image_number, piece_dim=512):
