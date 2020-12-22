@@ -71,7 +71,7 @@ if __name__ == '__main__':
     min_val_loss = 100
     max_val_dice = -100
     for epoch in range(epochs + epochs_minlr):
-        with open(f"{model_name}/{model_name}.log", 'a+') as logger:
+        with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f"Epoch # {epoch}, lr = {optim.param_groups[0]['lr']}\n")
         empty_cache()
         dice = 0
@@ -99,8 +99,8 @@ if __name__ == '__main__':
         val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, val_index, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
-            save(model.state_dict(), f"{model_name}/{model_name}_{epoch}.h5")
-            save(model.state_dict(), f"{model_name}/last_best_model.h5")
+            save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+            save(model.state_dict(), f"../{model_name}/last_best_model.h5")
 
         #    dices = []
         #     for image_number in range(1, len(Masks)):
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         # print("Dice on train macro ", dices, np.mean(dices))
         print("Dice on train micro ", train_dice)
         print(f"Dice on val (1 image) = {val_dice}")
-        with open(f"{model_name}/{model_name}.log", 'a+') as logger:
+        with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f'train loss = {train_loss}, train dice (micro) = {train_dice}\n')
             logger.write(f'validation loss = {val_loss}, val dice = {val_dice}\n')
             logger.write('\n')
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     image_dims = [(31295, 40429), (14844, 31262), (38160, 42360), (26840, 49780), (36800, 43780)]
     test_dataset = ValLoader(X_test_images, size)
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
-    model.load_state_dict(load(f'{model_name}/last_best_model.h5'))
+    model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
     test_masks, test_keys = predict_test(model, size, testloader, True)
     all_enc = []
     for n in range(len(sample_sub)):
@@ -143,4 +143,4 @@ if __name__ == '__main__':
         enc = mask2enc(mask)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'{model_name}/{model_name}.csv', index=False)
+    sample_sub.to_csv(f'../{model_name}/{model_name}.csv', index=False)
