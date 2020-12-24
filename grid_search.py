@@ -156,6 +156,7 @@ config['cross_val'] = False
 config['use_adaptive_sampler'] = False
 config['epochs_minlr'] = 0
 config['val_index'] = 7
+config['gpu_number'] = 3
 config['loss_name'] = 'comboloss'
 prefix = 'rnet34_gridsearch_'
 for size_after_reshape in [320]:
