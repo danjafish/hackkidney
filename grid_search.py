@@ -160,7 +160,7 @@ config['gpu_number'] = 3
 config['loss_name'] = 'comboloss'
 prefix = 'rnet34_gridsearch_'
 for size_after_reshape in [320]:
-    for use_sampler in [True, False]:
+    for use_sampler in [True]:
         for size in [320, 512, 1024, 1500]:
             for bs in [64]:
                 for epochs in [40]:
@@ -173,6 +173,7 @@ for size_after_reshape in [320]:
                                                 {"bce": 1, "dice": 2, "focal": 1}]:
                                     for step_size in [int(size * 0.25), int(size * 0.5), int(size * 0.75)]:
                                         config['size'] = size
+                                        config['use_sampler'] = use_sampler
                                         config['bs'] = bs
                                         config['epochs'] = epochs
                                         config['not_empty_ratio'] = not_empty_ratio
