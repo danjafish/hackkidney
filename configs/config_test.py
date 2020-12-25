@@ -1,3 +1,4 @@
+check_test
 gpu_number = 2
 size_after_reshape = 320
 cross_val = False

@@ -114,7 +114,7 @@ if __name__ == '__main__':
             logger.write(f'validation loss = {val_loss}, val dice = {val_dice}\n')
             logger.write('\n')
         print("=====================")
-    model.load_state_dict(load(f"{model_name}/last_best_model.h5"))
+    model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
     val_mask11, val_dice = calculate_dice(val_keys, val_masks, val_index, size)
     print(f"Dice on val (1 image) with TTA = {val_dice}")
