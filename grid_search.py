@@ -171,7 +171,7 @@ for size_after_reshape in [320]:
                                                 {"bce": 1, "dice": 1, "focal": 1},
                                                  {"bce": 2, "dice": 1, "focal": 2},
                                                 {"bce": 1, "dice": 2, "focal": 1}]:
-                                    for step_size in [320, 512, 1024]:
+                                    for step_size in [int(size * 0.5), int(size * 0.75)]:
                                         config['size'] = size
                                         config['use_sampler'] = use_sampler
                                         config['bs'] = bs
