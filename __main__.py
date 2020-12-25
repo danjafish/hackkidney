@@ -116,7 +116,7 @@ if __name__ == '__main__':
         print("=====================")
     model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
-    val_mask11, val_dice = calculate_dice(val_keys, val_masks, val_index, size)
+    val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, val_index, size)
     print(f"Dice on val (1 image) with TTA = {val_dice}")
 
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
