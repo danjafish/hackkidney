@@ -21,5 +21,6 @@ for weight in weights:
 if cross_val:
     model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
 else:
-    model_name = f'{prefix}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index}'
+    val_index_print = ''.join([str(x)+',' for x in val_index])
+    model_name = f'{prefix}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
 step_size = int(size*0.5)
