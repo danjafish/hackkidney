@@ -98,7 +98,17 @@ if __name__ == '__main__':
 
         if epoch < epochs:
             scheduler.step()
-        val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
+        m = 0
+        for img_number in val_index:
+            val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, img_number, size, image_dims)
+            with open(f"{model_name}/{model_name}.log", 'a+') as logger:
+                logger.write(f'dice on image {img_number} = {val_dice} ')
+            print(f'dice on image {img_number} = {val_dice}')
+            m += val_dice
+        with open(f"{model_name}/{model_name}.log", 'a+') as logger:
+            logger.write(f'\n')
+        val_dice = m / len(val_index)
+        # val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
@@ -141,7 +151,7 @@ if __name__ == '__main__':
     for n in range(len(sample_sub)):
         img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
         mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
-        t = 0.5
+        t = 0.4
         mask[mask < t] = 0
         mask[mask >= t] = 1
         enc = mask2enc(mask)
