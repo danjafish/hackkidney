@@ -101,11 +101,11 @@ if __name__ == '__main__':
         m = 0
         for img_number in val_index:
             val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, img_number, size, image_dims)
-            with open(f"{model_name}/{model_name}.log", 'a+') as logger:
+            with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
                 logger.write(f'dice on image {img_number} = {val_dice} ')
             print(f'dice on image {img_number} = {val_dice}')
             m += val_dice
-        with open(f"{model_name}/{model_name}.log", 'a+') as logger:
+        with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f'\n')
         val_dice = m / len(val_index)
         # val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
