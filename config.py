@@ -1,4 +1,4 @@
-gpu_number = 2
+gpu_number = 4
 size_after_reshape = 320
 cross_val = False
 use_sampler = True
@@ -13,7 +13,7 @@ loss_name = 'comboloss'
 max_lr = 7e-4
 min_lr = 3e-6
 prefix = 'rnet34_combo'
-weights = {"bce": 1, "dice": 0, "focal": 0}
+weights = {"bce": 2, "dice": 1, "focal": 2}
 s = 'w_'
 for weight in weights:
     s += str(weights[weight])
