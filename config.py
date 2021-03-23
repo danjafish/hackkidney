@@ -16,8 +16,8 @@ prefix = 'rnet34_combo'
 weights = {"bce": 1, "dice": 0, "focal": 0}
 s = 'w_'
 for weight in weights:
-    s+=str(weights[weight])
-    s+='-'
+    s += str(weights[weight])
+    s += '-'
 if cross_val:
     model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
 else:
