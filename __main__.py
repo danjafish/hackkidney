@@ -119,6 +119,8 @@ if __name__ == '__main__':
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
     test_paths = sample_sub.id.values
     print('Start test')
+    del X_images
+    gc.collect()
     X_test_images = []
     img_dims_test = []
     for name in test_paths:

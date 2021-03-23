@@ -13,7 +13,7 @@ import matplotlib
 
 def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=512):
     shape = image_dims[image_number]
-    big_mask = np.zeros(shape)
+    big_mask = np.zeros(shape[:2])
     for (ind, key) in keys:
         mask = masks[ind]
         big_mask[key[1] * piece_dim: (key[1] + 1) * piece_dim,
@@ -23,7 +23,7 @@ def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=51
 
 def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims, piece_dim=512):
     shape = image_dims[image_number]
-    big_mask = np.zeros(shape)
+    big_mask = np.zeros(shape[:2])
     for (ind, key) in img_keys:
         mask = final_mask[ind]
         big_mask[key[1] * piece_dim: (key[1] + 1) * piece_dim,
@@ -32,8 +32,8 @@ def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims
 
 
 def mask_tresholed(mask, t = 0.5):
-    mask[mask<t] = 0
-    mask[mask>=t] = 1
+    mask[mask < t] = 0
+    mask[mask >= t] = 1
     return mask
 
 
@@ -148,8 +148,6 @@ try:
     from itertools import ifilterfalse
 except ImportError:  # py3k
     from itertools import filterfalse
-
-eps = 1e-6
 
 
 def dice_round(preds, trues):
