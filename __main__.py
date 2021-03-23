@@ -131,7 +131,7 @@ if __name__ == '__main__':
     del img
     gc.collect()
 
-    test_dataset = ValLoader(X_test_images, size)
+    test_dataset = ValLoader(X_test_images, img_dims_test, size)
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
     test_masks, test_keys = predict_test(model, size, testloader, True)

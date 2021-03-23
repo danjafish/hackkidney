@@ -8,11 +8,10 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class ValLoader(Dataset):
-    def __init__(self, images, piece_dim=512):
+    def __init__(self, images, image_dims, piece_dim=512):
         self.piece_dim = piece_dim
         self.n_images = len(images)
         self.images = images
-        image_dims = [(31295, 40429), (14844, 31262), (38160, 42360), (26840, 49780), (36800, 43780)]
         # assert len(images) == len(image_dims)
         self.ids = [(image_id, x, y)
                     for image_id in range(self.n_images)
