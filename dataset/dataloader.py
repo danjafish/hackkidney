@@ -79,9 +79,9 @@ class KidneyLoader(Dataset):
 
         self.val_idx = val_index
         if self.val:
-            self.ids = [x for x in self.ids if x[0] == self.val_idx]
+            self.ids = [x for x in self.ids if x[0] in self.val_idx]
         else:
-            self.ids = [x for x in self.ids if x[0] != self.val_idx]
+            self.ids = [x for x in self.ids if x[0] not in self.val_idx]
 
     def __getitem__(self, idx):
         image_id, x, y = self.ids[idx]
