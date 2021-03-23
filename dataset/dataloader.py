@@ -56,6 +56,7 @@ class KidneySampler(Sampler):
 
 
 class KidneyLoader(Dataset):
+    # TODO remove completely empty images
     def __init__(self, images, masks, image_dims, val=False, piece_dim=512, step_size=0, val_index=0):
         self.piece_dim = piece_dim
         self.n_images = len(images)
@@ -63,11 +64,7 @@ class KidneyLoader(Dataset):
         self.masks = masks
         self.step_size = step_size
         self.val = val
-        #         image_dims = [(31278, 25794), (18484, 13013), (34940, 49548), (25784, 34937),
-        #                      (16180, 27020), (38160, 39000), (30440, 22240), (26780, 32220)]
-
-        # assert len(images) == len(image_dims)
-        if (self.val or self.step_size == 0):
+        if self.val or self.step_size == 0:
             self.ids = [(image_id, x, y)
                         for image_id in range(self.n_images)
                         for x in range(image_dims[image_id][0] // self.piece_dim)
