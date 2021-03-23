@@ -37,10 +37,10 @@ def mask_tresholed(mask, t = 0.5):
     return mask
 
 
-def calc_average_dice(val_keys, val_masks, val_index, image_dims, size, t=0.5):
+def calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size, t=0.5):
     m = 0
     for img_number in val_index:
-        val_mask11, val_dice = calculate_dice(val_keys, val_masks, img_number, size, image_dims, t)
+        val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, img_number, size, image_dims, t)
         # test
         print(f'dice on image {img_number} = {val_dice}')
         m += val_dice
@@ -48,9 +48,9 @@ def calc_average_dice(val_keys, val_masks, val_index, image_dims, size, t=0.5):
     return val_dice
 
 
-def calculate_dice(Masks, keys, masks, image_number, piece_dim, img_dims, t=0.5):
+def calculate_dice(Masks, keys, masks, image_number, piece_dim, image_dims, t=0.5):
     img_n_keys = [(i,k) for i,k in enumerate(keys) if k[0] == image_number]
-    mask = mask_from_keys_and_preds(img_n_keys, masks, image_number, img_dims, piece_dim)
+    mask = mask_from_keys_and_preds(img_n_keys, masks, image_number, image_dims, piece_dim)
     true_mask = Masks[image_number]
     dice_s = dice_score(mask_tresholed(mask, t), true_mask)
     return mask, dice_s

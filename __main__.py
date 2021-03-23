@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
         if epoch < epochs:
             scheduler.step()
-        val_dice = calc_average_dice(val_keys, val_masks, val_index, image_dims, size)
+        val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         print("=====================")
     model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
-    val_dice = calc_average_dice(val_keys, val_masks, val_index, image_dims, size)
+    val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
     print(f"Dice on val (average) with TTA = {val_dice}")
 
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
