@@ -1,4 +1,4 @@
-gpu_number = 4
+gpu_number = 2
 size_after_reshape = 320
 cross_val = False
 use_sampler = True

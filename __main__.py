@@ -19,7 +19,8 @@ if __name__ == '__main__':
     print('Start data preparation')
     seed_everything(2021)
     os.system(f"mkdir ../{str(model_name)}")
-    data_path = '/home/data/Kidney/data/'
+    #data_path = '/home/data/Kidney/data/'
+    data_path = '../data/'
     data = pd.read_csv(data_path + 'train.csv')
     X_images = []
     Masks = []
