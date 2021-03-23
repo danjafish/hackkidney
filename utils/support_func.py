@@ -62,14 +62,14 @@ def dice_score(pred, targs):
     return 2.0 * (pred*targs).sum() / ((pred+targs).sum() + 1e-10)
 
 
-def get_indexes(fold, X_images, Masks, image_dims, size, step_size):
+def get_indexes(val_index, X_images, Masks, image_dims, size, step_size):
     positive_idxs = []
     negative_idxs = []
     ids = [(image_id, x, y)
             for image_id in range(len(X_images))
             for x in range(0, (image_dims[image_id][0] // step_size) - 1)
             for y in range((image_dims[image_id][1] // step_size) - 1)]
-    ids = [x for x in ids if x[0] != fold]
+    ids = [x for x in ids if x[0] not in val_index]
     for ind, (image_id, x, y) in enumerate(ids):
         mask = Masks[image_id]
         mask = mask[x * step_size : x * step_size + size,
