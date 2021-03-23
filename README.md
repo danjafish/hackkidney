@@ -7,7 +7,7 @@ Comp web page: https://www.kaggle.com/c/hubmap-kidney-segmentation
 Experiment results: https://docs.google.com/spreadsheets/d/1YEOMqVhTNBaAcgDyq1AnsSwrZAF0t37INMS1cDvjYcM/edit#gid=0
 
 
-To run: python3 __main__.py
+To run training and create csv file with submit: python3 __main__.py
 
 
 To run grid search: python3 grid_search.py
