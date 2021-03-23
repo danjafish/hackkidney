@@ -17,8 +17,8 @@ if __name__ == '__main__':
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
     print('Start data preparation')
-    seed_everything(2020)
-    os.system(f"mkdir ../{model_name}")
+    seed_everything(2021)
+    os.system(f"mkdir ../{str(model_name)}")
     data_path = '/home/data/Kidney/data/'
     data = pd.read_csv(data_path + 'train.csv')
     X_images = []
@@ -26,8 +26,9 @@ if __name__ == '__main__':
     image_dims = []
     for i in range(len(data)):
         img = tiff.imread(data_path + f"train/{data.id[i]}.tiff")
-
-        if (img.shape[0] == 3):
+        if img.shape[0] == 1:
+            img = img[0][0]
+        if img.shape[0] == 3:
             img = np.moveaxis(img, 0, 2)
         X_images.append(img)
         shape = (img.shape[1], img.shape[0])
