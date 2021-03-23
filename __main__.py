@@ -96,19 +96,14 @@ if __name__ == '__main__':
 
         if epoch < epochs:
             scheduler.step()
-        val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, val_index, size)
+        val_dice = calc_average_dice(val_keys, val_masks, val_index, image_dims, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
             save(model.state_dict(), f"../{model_name}/last_best_model.h5")
 
-        #    dices = []
-        #     for image_number in range(1, len(Masks)):
-        #         mask11, dice = calculate_dice(pred_keys, final_masks, image_number, size)
-        #         dices.append(dice)
-        # print("Dice on train macro ", dices, np.mean(dices))
         print("Dice on train micro ", train_dice)
-        print(f"Dice on val (1 image) = {val_dice}")
+        print(f"Dice on val (average) = {val_dice}")
         with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f'train loss = {train_loss}, train dice (micro) = {train_dice}\n')
             logger.write(f'validation loss = {val_loss}, val dice = {val_dice}\n')
@@ -116,23 +111,24 @@ if __name__ == '__main__':
         print("=====================")
     model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
-    val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, val_index, size)
-    print(f"Dice on val (1 image) with TTA = {val_dice}")
+    val_dice = calc_average_dice(val_keys, val_masks, val_index, image_dims, size)
+    print(f"Dice on val (average) with TTA = {val_dice}")
 
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
     test_paths = sample_sub.id.values
     print('Start test')
     X_test_images = []
+    img_dims_test = []
     for name in test_paths:
         img = tiff.imread(data_path + f"test/{name}.tiff")
-        if (img.shape[0] == 3):
+        if img.shape[0] == 3:
             img = np.moveaxis(img, 0, 2)
         X_test_images.append(img)
+        img_dims_test.append(img.shape)
         print(img.shape)
     del img
     gc.collect()
 
-    image_dims = [(31295, 40429), (14844, 31262), (38160, 42360), (26840, 49780), (36800, 43780)]
     test_dataset = ValLoader(X_test_images, size)
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
@@ -140,7 +136,7 @@ if __name__ == '__main__':
     all_enc = []
     for n in range(len(sample_sub)):
         img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
-        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, size)
+        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
         t = 0.5
         mask[mask < t] = 0
         mask[mask >= t] = 1

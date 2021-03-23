@@ -11,11 +11,8 @@ from PIL import Image, ImageDraw
 import matplotlib
 
 
-def mask_from_keys_and_preds(keys, masks, image_number, piece_dim=512):
-    image_dims = [(31278, 25794), (18484, 13013), (34940, 49548), (25784, 34937),
-                  (16180, 27020), (38160, 39000), (30440, 22240), (26780, 32220)]
+def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=512):
     shape = image_dims[image_number]
-
     big_mask = np.zeros(shape)
     for (ind, key) in keys:
         mask = masks[ind]
@@ -24,10 +21,8 @@ def mask_from_keys_and_preds(keys, masks, image_number, piece_dim=512):
     return big_mask
 
 
-def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, piece_dim=512):
-    image_dims = [(31295, 40429), (14844, 31262), (38160, 42360), (26840, 49780), (36800, 43780)]
+def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims, piece_dim=512):
     shape = image_dims[image_number]
-
     big_mask = np.zeros(shape)
     for (ind, key) in img_keys:
         mask = final_mask[ind]
@@ -42,16 +37,26 @@ def mask_tresholed(mask, t = 0.5):
     return mask
 
 
-def calculate_dice(Masks, keys, masks, image_number, piece_dim, t = 0.5):
+def calc_average_dice(val_keys, val_masks, val_index, image_dims, size, t=0.5):
+    m = 0
+    for img_number in val_index:
+        val_mask11, val_dice = calculate_dice(val_keys, val_masks, img_number, size, image_dims, t)
+        print(f'dice on image {img_number} = {val_dice}')
+        m += val_dice
+    val_dice = m/len(val_index)
+    return val_dice
+
+
+def calculate_dice(Masks, keys, masks, image_number, piece_dim, img_dims, t=0.5):
     img_n_keys = [(i,k) for i,k in enumerate(keys) if k[0] == image_number]
-    mask = mask_from_keys_and_preds(img_n_keys, masks, image_number, piece_dim)
+    mask = mask_from_keys_and_preds(img_n_keys, masks, image_number, img_dims, piece_dim)
     true_mask = Masks[image_number]
-    dice_s =  dice_score(mask_tresholed(mask, t), true_mask)
-    return mask, dice_s#metric(FloatTensor(true_mask).cuda(), FloatTensor(mask).cuda())
+    dice_s = dice_score(mask_tresholed(mask, t), true_mask)
+    return mask, dice_s
 
 
 def dice_score(pred, targs):
-    if ((np.sum(pred) == 0) & (np.sum(targs) == 0)):
+    if (np.sum(pred) == 0) & (np.sum(targs) == 0):
         return 1.0
     return 2.0 * (pred*targs).sum() / ((pred+targs).sum() + 1e-10)
 
