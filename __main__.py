@@ -114,6 +114,9 @@ if __name__ == '__main__':
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
             save(model.state_dict(), f"../{model_name}/last_best_model.h5")
 
+        if (epoch+5) > epochs:
+            save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+
         print("Dice on train micro ", train_dice)
         print(f"Dice on val (average) = {val_dice}")
         with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
@@ -157,4 +160,18 @@ if __name__ == '__main__':
         enc = mask2enc(mask)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_name}/{model_name}.csv', index=False)
+    sample_sub.to_csv(f'../{model_name}/best_{model_name}_{t}.csv', index=False)
+
+    model.load_state_dict(load(f'../{model_name}/{model_name}_{epochs}.h5'))
+    test_masks, test_keys = predict_test(model, size, testloader, True)
+    all_enc = []
+    for n in range(len(sample_sub)):
+        img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
+        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
+        t = 0.4
+        mask[mask < t] = 0
+        mask[mask >= t] = 1
+        enc = mask2enc(mask)
+        all_enc.append(enc[0])
+    sample_sub.predicted = all_enc
+    sample_sub.to_csv(f'../{model_name}/{model_name}_{epochs}_{t}.csv', index=False)
