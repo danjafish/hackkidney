@@ -21,13 +21,19 @@ def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=51
     return big_mask
 
 
-def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims, piece_dim=512):
+def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims, piece_dim=512, overlap=False):
     shape = image_dims[image_number]
     big_mask = np.zeros(shape[:2])
+    c = big_mask.copy()
     for (ind, key) in img_keys:
         mask = final_mask[ind]
         big_mask[key[1] * piece_dim: (key[1] + 1) * piece_dim,
         key[2] * piece_dim: (key[2] + 1) * piece_dim] = mask
+
+        c[key[1] * piece_dim: (key[1] + 1) * piece_dim,
+        key[2] * piece_dim: (key[2] + 1) * piece_dim] += 1
+    #if overlap:
+    big_mask = big_mask / c
     return big_mask
 
 
@@ -74,6 +80,11 @@ def get_indexes(val_index, X_images, Masks, image_dims, size, step_size):
         mask = Masks[image_id]
         mask = mask[x * step_size : x * step_size + size,
                     y * step_size : y * step_size + size]
+        image = X_images[image_id]
+        image = image[x * step_size : x * step_size + size,
+                    y * step_size : y * step_size + size]
+        if np.sum(image) == 0:
+            continue
         if np.sum(mask) == 0:
             negative_idxs.append(ind)
         else:

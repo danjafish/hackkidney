@@ -8,23 +8,36 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class ValLoader(Dataset):
-    def __init__(self, images, image_dims, piece_dim=512):
+    def __init__(self, images, image_dims, piece_dim=512, overlap=False, step_size=256):
         self.piece_dim = piece_dim
         self.n_images = len(images)
         self.images = images
+        self.overlap = overlap
+        self.step_size = step_size
         # assert len(images) == len(image_dims)
-        self.ids = [(image_id, x, y)
-                    for image_id in range(self.n_images)
-                    for x in range(image_dims[image_id][0] // self.piece_dim)
-                    for y in range(image_dims[image_id][1] // self.piece_dim)
-                    ]
+        if not overlap:
+            self.ids = [(image_id, x, y)
+                        for image_id in range(self.n_images)
+                        for x in range(image_dims[image_id][0] // self.piece_dim)
+                        for y in range(image_dims[image_id][1] // self.piece_dim)
+                        ]
+        else:
+            self.ids = [(image_id, x, y)
+                        for image_id in range(self.n_images)
+                        for x in range(0, (image_dims[image_id][0] // self.step_size) - 1)
+                        for y in range((image_dims[image_id][1] // self.step_size) - 1)
+                        ]
 
     def __getitem__(self, idx):
         image_id, x, y = self.ids[idx]
 
         img = self.images[image_id]
-        piece = img[x * self.piece_dim: (x + 1) * self.piece_dim,
-                y * self.piece_dim: (y + 1) * self.piece_dim]
+        if not self.overlap:
+            piece = img[x * self.piece_dim: (x + 1) * self.piece_dim,
+                    y * self.piece_dim: (y + 1) * self.piece_dim]
+        else:
+            piece = img[x * self.step_size: x * self.step_size + self.piece_dim,
+                    y * self.step_size: y * self.step_size + self.piece_dim]
         aug = ALBUMENTATIONS_VAL(image=piece)
         piece = aug['image']
 
