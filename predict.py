@@ -47,7 +47,7 @@ if __name__ == '__main__':
     all_enc = []
     for n in range(len(sample_sub)):
         img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
-        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
+        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size, step_size=step_size)
         t = 0.4
         mask[mask < t] = 0
         mask[mask >= t] = 1

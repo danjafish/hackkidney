@@ -21,19 +21,24 @@ def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=51
     return big_mask
 
 
-def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims, piece_dim=512, overlap=False):
+def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims, piece_dim=512,
+                                  overlap=False, step_size=256):
     shape = image_dims[image_number]
     big_mask = np.zeros(shape[:2])
     c = big_mask.copy()
     for (ind, key) in img_keys:
         mask = final_mask[ind]
-        big_mask[key[1] * piece_dim: (key[1] + 1) * piece_dim,
-        key[2] * piece_dim: (key[2] + 1) * piece_dim] = mask
+        if overlap:
+            ind_x = key[1] * step_size
+            ind_y = key[2] * step_size
+            big_mask[ind_x: ind_x+piece_dim, ind_y: ind_y+piece_dim] += mask
+            c[ind_x: ind_x+piece_dim, ind_y: ind_y+piece_dim] += 1
+        else:
+            big_mask[key[1] * piece_dim: (key[1] + 1) * piece_dim,
+            key[2] * piece_dim: (key[2] + 1) * piece_dim] = mask
 
-        c[key[1] * piece_dim: (key[1] + 1) * piece_dim,
-        key[2] * piece_dim: (key[2] + 1) * piece_dim] += 1
-    #if overlap:
-    big_mask = big_mask / c
+    if overlap:
+        big_mask = big_mask / c
     return big_mask
 
 
