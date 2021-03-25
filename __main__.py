@@ -162,7 +162,7 @@ if __name__ == '__main__':
     sample_sub.predicted = all_enc
     sample_sub.to_csv(f'../{model_name}/best_{model_name}_{t}.csv', index=False)
 
-    model.load_state_dict(load(f'../{model_name}/{model_name}_{epochs}.h5'))
+    model.load_state_dict(load(f'../{model_name}/{model_name}_{epochs-1}.h5'))
     test_masks, test_keys = predict_test(model, size, testloader, True)
     all_enc = []
     for n in range(len(sample_sub)):
@@ -174,4 +174,4 @@ if __name__ == '__main__':
         enc = mask2enc(mask)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_name}/{model_name}_{epochs}_{t}.csv', index=False)
+    sample_sub.to_csv(f'../{model_name}/{model_name}_{epochs-1}_{t}.csv', index=False)
