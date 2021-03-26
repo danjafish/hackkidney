@@ -4,6 +4,8 @@ from torch import sigmoid, no_grad, save, load
 from torch.cuda import empty_cache
 from utils.support_func import dice_score, mask_tresholed
 from dataset.dataloader import *
+from config import fp16
+import apex
 from torch.nn import BCEWithLogitsLoss
 
 
@@ -24,7 +26,11 @@ def train_one_epoch(model, optim, trainloader, size, loss):
         big_ground_true = interpolate(y_true, (size, size))
         l = loss(y_pred, y_true)
         optim.zero_grad()
-        l.backward()
+        if fp16:
+            with apex.amp.scale_loss(l, optim) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            l.backward()
         optim.step()
 
         for pred, true_mask in zip(torch.sigmoid(big_masks).detach().cpu().numpy(),

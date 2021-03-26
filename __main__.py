@@ -11,6 +11,7 @@ import tifffile as tiff
 from torch.optim import AdamW, Adam
 from torch.nn import BCEWithLogitsLoss
 import os
+import apex
 
 
 if __name__ == '__main__':
@@ -55,6 +56,7 @@ if __name__ == '__main__':
     print(x.shape, y.shape)
     model = smp.Unet("efficientnet-b4", encoder_weights="imagenet", in_channels=3, classes=1,
                      decoder_use_batchnorm=False).cuda()
+
     if loss_name == 'comboloss':
         print("Use combo loss")
         loss = ComboLoss(weights=weights)
@@ -62,6 +64,11 @@ if __name__ == '__main__':
         print("Use BCE Loss")
         loss = BCEWithLogitsLoss()
     optim = AdamW(model.parameters(), lr=max_lr)
+    if fp16:
+        model, optimizer = apex.amp.initialize(
+            model,
+            optim,
+            opt_level='O1')
     metric = smp.utils.losses.DiceLoss()
     SchedulerClass_cos = torch.optim.lr_scheduler.CosineAnnealingLR
     scheduler_params_cos = dict(
