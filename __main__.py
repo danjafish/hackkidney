@@ -148,6 +148,7 @@ if __name__ == '__main__':
                     if el[1] < val_dice:
                         best_dice_epochs[ind] = (epoch, val_dice)
                         save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+                print('Best epochs updated. ', best_dice_epochs)
         # val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
