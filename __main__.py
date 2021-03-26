@@ -16,6 +16,27 @@ import apex
 
 
 if __name__ == '__main__':
+    args = parse_args()
+    epochs = args.epochs
+    encoder = args.encoder
+    bs = args.bs
+    prefix = encoder
+    max_lr = args.max_lr
+    fp16 = args.fp16
+    min_lr = args.min_lr
+    size = args.size
+    size_after_reshape = args.size_after_reshape
+    step_size_ratio = args.step_size_ratio
+    step_size = int(size * step_size)
+    gpu_number = args.gpu_number
+    for weight in weights:
+        s += str(weights[weight])
+        s += '-'
+    if cross_val:
+        model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
+    else:
+        val_index_print = ''.join([str(x) + ',' for x in val_index])
+        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
@@ -56,7 +77,7 @@ if __name__ == '__main__':
     valloader = DataLoader(val_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     x, y, key = train_dataset[10]
     print(x.shape, y.shape)
-    model = smp.Unet("efficientnet-b4", encoder_weights="imagenet", in_channels=3, classes=1,
+    model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                      decoder_use_batchnorm=False).cuda()
 
     if loss_name == 'comboloss':
@@ -118,7 +139,7 @@ if __name__ == '__main__':
         with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f'\n')
         val_dice = m / len(val_index)
-        if predict_by_epochs != 'best'
+        if predict_by_epochs != 'best':
             if len(best_dice_epochs) < predict_by_epochs:
                 best_dice_epochs.append((epoch, val_dice))
                 save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
@@ -184,7 +205,7 @@ if __name__ == '__main__':
             enc = mask2enc(mask)
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
-        s = [str(e) + '_' for s in best_dice_epochs]
+        s = [str(e) + '_' for e in best_dice_epochs]
         sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}.csv', index=False)
 
     # all_enc = []
