@@ -18,9 +18,9 @@ import apex
 if __name__ == '__main__':
     args = parse_args()
     # epochs = args.epochs
-    # encoder = args.encoder
+    encoder = args.encoder
     # bs = args.bs
-    # prefix = encoder
+    prefix = encoder
     # max_lr = args.max_lr
     # fp16 = args.fp16
     # min_lr = args.min_lr
@@ -29,6 +29,7 @@ if __name__ == '__main__':
     # step_size_ratio = args.step_size_ratio
     # step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
+
     for weight in weights:
         s += str(weights[weight])
         s += '-'

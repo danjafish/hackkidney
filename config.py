@@ -41,7 +41,7 @@ val_index = [1, 7, 13]
 loss_name = 'comboloss'
 max_lr = 7e-4
 min_lr = 3e-6
-predict_by_epochs = 'best'
+predict_by_epochs = 4
 # weights_for_pred_epochs = 1 if predict_by_epochs == 'best' else [1]*len(predict_by_epochs)
 new_augs = False
 weights = {"bce": 1, "dice": 0, "focal": 0}
