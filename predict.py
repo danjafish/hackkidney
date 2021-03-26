@@ -55,4 +55,4 @@ if __name__ == '__main__':
         enc = mask2enc(mask)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_path}/best_{model_name}_{t}_{overlap}.csv', index=False)
+    sample_sub.to_csv(f'../{model_path}/best_{model_path}_{t}_{overlap}.csv', index=False)
