@@ -1,5 +1,5 @@
 from utils.support_func import mask_from_keys_and_preds_test, mask2enc
-from __main__ import size
+from config import size
 
 
 def make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test, t=0.4):
