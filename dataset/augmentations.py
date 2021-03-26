@@ -1,6 +1,6 @@
 import albumentations as albu
 import cv2
-from config import size_after_reshape, new_augs, size
+from __main__ import size_after_reshape, new_augs, size
 ALBUMENTATIONS_VAL = albu.Compose([albu.Resize(size_after_reshape, size_after_reshape)])
 if not new_augs:
     ALBUMENTATIONS_TRAIN = albu.Compose([
