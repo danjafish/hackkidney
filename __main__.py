@@ -16,6 +16,7 @@ import apex
 
 
 if __name__ == '__main__':
+
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
     print('Start data preparation')
@@ -80,6 +81,7 @@ if __name__ == '__main__':
     print('Start train')
     min_val_loss = 100
     max_val_dice = -100
+    best_dice_epochs = []
     for epoch in range(epochs + epochs_minlr):
         with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f"Epoch # {epoch}, lr = {optim.param_groups[0]['lr']}\n")
@@ -116,14 +118,20 @@ if __name__ == '__main__':
         with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
             logger.write(f'\n')
         val_dice = m / len(val_index)
+        if predict_by_epochs != 'best'
+            if len(best_dice_epochs) < predict_by_epochs:
+                best_dice_epochs.append((epoch, val_dice))
+                save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+            else:
+                for ind,el in enumerate(best_dice_epochs):
+                    if el[1] < val_dice:
+                        best_dice_epochs[ind] = (epoch, val_dice)
+                        save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
         # val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
             save(model.state_dict(), f"../{model_name}/last_best_model.h5")
-        if predict_by_epochs != 'best':
-            if (epoch in predict_by_epochs) > epochs:
-                save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
 
         print("Dice on train micro ", train_dice)
         print(f"Dice on val (average) = {val_dice}")
@@ -162,12 +170,12 @@ if __name__ == '__main__':
         make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test, t=0.4)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
-        for epoch in predict_by_epochs:
+        for epoch in best_dice_epochs:
             model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test)
-                bled_masks[n] += mask/len(predict_by_epochs)
+                bled_masks[n] += mask/len(best_dice_epochs)
         all_enc = []
         for mask in bled_masks:
             t = 0.4
@@ -176,7 +184,7 @@ if __name__ == '__main__':
             enc = mask2enc(mask)
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
-        s = [str(e) + '_' for s in predict_by_epochs]
+        s = [str(e) + '_' for s in best_dice_epochs]
         sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}.csv', index=False)
 
     # all_enc = []
