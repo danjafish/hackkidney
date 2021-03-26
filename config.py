@@ -1,4 +1,6 @@
 import argparse
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--encoder', type=str, default='efficientnet-b4')

@@ -27,7 +27,7 @@ if __name__ == '__main__':
     size = args.size
     size_after_reshape = args.size_after_reshape
     step_size_ratio = args.step_size_ratio
-    step_size = int(size * step_size)
+    step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
     for weight in weights:
         s += str(weights[weight])
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     print('Start data preparation')
     seed_everything(2021)
     os.system(f"mkdir ../{str(model_name)}")
-    #data_path = '/home/data/Kidney/data/'
+    # data_path = '/home/data/Kidney/data/'
     data_path = '../data/'
     data = pd.read_csv(data_path + 'train.csv')
     X_images = []
