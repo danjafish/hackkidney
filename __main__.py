@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 from config import *
 from utils.support_func import *
 from nn.trainer import *
+from nn.predicter import *
 import segmentation_models_pytorch as smp
 import gc
 from dataset.dataloader import KidneySampler, KidneyLoader
@@ -120,9 +121,9 @@ if __name__ == '__main__':
             max_val_dice = val_dice
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
             save(model.state_dict(), f"../{model_name}/last_best_model.h5")
-
-        if (epoch+5) > epochs:
-            save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+        if predict_by_epochs != 'best':
+            if (epoch in predict_by_epochs) > epochs:
+                save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
 
         print("Dice on train micro ", train_dice)
         print(f"Dice on val (average) = {val_dice}")
@@ -155,30 +156,51 @@ if __name__ == '__main__':
 
     test_dataset = ValLoader(X_test_images, img_dims_test, size)
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
-    model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
-    test_masks, test_keys = predict_test(model, size, testloader, True)
-    all_enc = []
-    for n in range(len(sample_sub)):
-        img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
-        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
-        t = 0.4
-        mask[mask < t] = 0
-        mask[mask >= t] = 1
-        enc = mask2enc(mask)
-        all_enc.append(enc[0])
-    sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_name}/best_{model_name}_{t}.csv', index=False)
+    if predict_by_epochs == 'best':
+        model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
+        test_masks, test_keys = predict_test(model, size, testloader, True)
+        make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test, t=0.4)
+    else:
+        bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
+        for epoch in predict_by_epochs:
+            model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch}.h5'))
+            test_masks, test_keys = predict_test(model, size, testloader, True)
+            for n in range(len(sample_sub)):
+                mask = make_masks(test_keys, test_masks, n, img_dims_test)
+                bled_masks[n] += mask/len(predict_by_epochs)
+        all_enc = []
+        for mask in bled_masks:
+            t = 0.4
+            mask[mask < t] = 0
+            mask[mask >= t] = 1
+            enc = mask2enc(mask)
+            all_enc.append(enc[0])
+        sample_sub.predicted = all_enc
+        s = [str(e) + '_' for s in predict_by_epochs]
+        sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}.csv', index=False)
 
-    model.load_state_dict(load(f'../{model_name}/{model_name}_{epochs-1}.h5'))
-    test_masks, test_keys = predict_test(model, size, testloader, True)
-    all_enc = []
-    for n in range(len(sample_sub)):
-        img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
-        mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
-        t = 0.4
-        mask[mask < t] = 0
-        mask[mask >= t] = 1
-        enc = mask2enc(mask)
-        all_enc.append(enc[0])
-    sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_name}/{model_name}_{epochs-1}_{t}.csv', index=False)
+    # all_enc = []
+    # for n in range(len(sample_sub)):
+    #     img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
+    #     mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
+    #     t = 0.4
+    #     mask[mask < t] = 0
+    #     mask[mask >= t] = 1
+    #     enc = mask2enc(mask)
+    #     all_enc.append(enc[0])
+    # sample_sub.predicted = all_enc
+    # sample_sub.to_csv(f'../{model_name}/best_{model_name}_{t}.csv', index=False)
+    #
+    # model.load_state_dict(load(f'../{model_name}/{model_name}_{epochs-1}.h5'))
+    # test_masks, test_keys = predict_test(model, size, testloader, True)
+    # all_enc = []
+    # for n in range(len(sample_sub)):
+    #     img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
+    #     mask = mask_from_keys_and_preds_test(img_n_keys, test_masks, n, img_dims_test, size)
+    #     t = 0.4
+    #     mask[mask < t] = 0
+    #     mask[mask >= t] = 1
+    #     enc = mask2enc(mask)
+    #     all_enc.append(enc[0])
+    # sample_sub.predicted = all_enc
+    # sample_sub.to_csv(f'../{model_name}/{model_name}_{epochs-1}_{t}.csv', index=False)

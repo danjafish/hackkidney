@@ -13,7 +13,8 @@ val_index = [1, 7, 13]
 loss_name = 'comboloss'
 max_lr = 7e-4
 min_lr = 3e-6
-prefix = 'effb4_'
+prefix = 'effb4'
+predict_by_epochs = 'best'
 new_augs = False
 weights = {"bce": 1, "dice": 0, "focal": 0}
 s = 'w_'
@@ -24,5 +25,5 @@ if cross_val:
     model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
 else:
     val_index_print = ''.join([str(x)+',' for x in val_index])
-    model_name = f'{prefix}_{new_augs}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
+    model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
 step_size = int(size*0.5)
