@@ -1,6 +1,9 @@
 import albumentations as albu
 import cv2
-from __main__ import size_after_reshape, new_augs, size
+from config import new_augs
+
+size = 1024
+size_after_reshape = 320
 ALBUMENTATIONS_VAL = albu.Compose([albu.Resize(size_after_reshape, size_after_reshape)])
 if not new_augs:
     ALBUMENTATIONS_TRAIN = albu.Compose([
@@ -15,7 +18,7 @@ if not new_augs:
             #albu.IAAPiecewiseAffine(p=0.3),
             ], p=0.3),
         albu.OneOf([
-            albu.HueSaturationValue(10,15,10),
+            albu.HueSaturationValue(10, 15, 10),
             albu.CLAHE(clip_limit=2),
             albu.RandomBrightnessContrast(),
             ], p=0.3),
