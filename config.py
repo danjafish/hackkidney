@@ -5,14 +5,15 @@ use_sampler = True
 use_adaptive_sampler = False
 size = 1024
 bs = 40
-epochs = 40
+epochs = 30
 epochs_minlr = 0
 not_empty_ratio = 0.5
 val_index = [1,7,13]
 loss_name = 'comboloss'
 max_lr = 7e-4
 min_lr = 3e-6
-prefix = 'effb4_combo'
+prefix = 'effb4_'
+new_augs = False
 weights = {"bce": 1, "dice": 0, "focal": 0}
 s = 'w_'
 for weight in weights:
@@ -22,5 +23,5 @@ if cross_val:
     model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
 else:
     val_index_print = ''.join([str(x)+',' for x in val_index])
-    model_name = f'{prefix}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
+    model_name = f'{prefix}_{new_augs}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
 step_size = int(size*0.5)
