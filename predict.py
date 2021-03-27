@@ -53,19 +53,22 @@ if __name__ == '__main__':
     gc.collect()
 
     test_dataset = ValLoader(X_test_images, img_dims_test, size, new_augs=new_augs,
-                             size_after_reshape=size_after_reshape)
+                             size_after_reshape=size_after_reshape, overlap=True, step_size=step_size)
+    print(len(test_dataset))
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     if predict_by_epochs == 'best':
         model.load_state_dict(load(f'../{model_path}/last_best_model.h5'))
         test_masks, test_keys = predict_test(model, size, testloader, True)
-        make_prediction(sample_sub, test_keys, test_masks, model_path, img_dims_test, size, t=0.4)
+        make_prediction(sample_sub, test_keys, test_masks,
+                        model_path, img_dims_test, size, overlap, step_size, t=0.4)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
             model.load_state_dict(load(f'../{model_path}/{model_path}_{epoch}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
-                mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
+                mask = make_masks(test_keys, test_masks, n, img_dims_test, size,
+                                  overlap, step_size)
                 bled_masks[n] += mask / len(best_dice_epochs)
         all_enc = []
         for mask in bled_masks:
