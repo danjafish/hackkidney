@@ -78,5 +78,5 @@ if __name__ == '__main__':
             enc = mask2enc(mask)
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
-        s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
-        sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}.csv', index=False)
+        s = ''.join([str(e) + '_' for e in best_dice_epochs])[:-1]
+        sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap = {overlap}.csv', index=False)
