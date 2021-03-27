@@ -42,7 +42,7 @@ max_lr = 7e-4
 min_lr = 3e-6
 predict_by_epochs = 4
 # weights_for_pred_epochs = 1 if predict_by_epochs == 'best' else [1]*len(predict_by_epochs)
-new_augs = False
+new_augs = True
 weights = {"bce": 1, "dice": 0, "focal": 0}
 s = 'w_'
 # step_size = int(size*0.5)

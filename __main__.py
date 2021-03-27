@@ -196,14 +196,14 @@ if __name__ == '__main__':
     if predict_by_epochs == 'best':
         model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
         test_masks, test_keys = predict_test(model, size, testloader, True)
-        make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test, t=0.4)
+        make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test, size, t=0.4)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
             model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
-                mask = make_masks(test_keys, test_masks, n, img_dims_test)
+                mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
                 bled_masks[n] += mask/len(best_dice_epochs)
         all_enc = []
         for mask in bled_masks:
