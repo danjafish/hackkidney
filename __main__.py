@@ -1,4 +1,5 @@
 import pandas as pd
+from torch.cuda import empty_cache
 import numpy as np
 from torch.utils.data import DataLoader
 from config import *
