@@ -1,6 +1,6 @@
 from torch.utils.data.sampler import Sampler
 from torch.utils.data import Dataset, DataLoader
-from dataset.augmentations import ALBUMENTATIONS_TRAIN, ALBUMENTATIONS_VAL
+from dataset.augmentations import get_augs
 import numpy as np
 import cv2
 
@@ -8,12 +8,14 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class ValLoader(Dataset):
-    def __init__(self, images, image_dims, piece_dim=512, overlap=False, step_size=256):
+    def __init__(self, images, image_dims, piece_dim=512, overlap=False,
+                 step_size=256, new_augs=False, size_after_reshape=320):
         self.piece_dim = piece_dim
         self.n_images = len(images)
         self.images = images
         self.overlap = overlap
         self.step_size = step_size
+        self.ALBUMENTATIONS_TRAIN, self.ALBUMENTATIONS_VAL = get_augs(new_augs, piece_dim, size_after_reshape)
         # assert len(images) == len(image_dims)
         if not overlap:
             self.ids = [(image_id, x, y)
@@ -38,7 +40,7 @@ class ValLoader(Dataset):
         else:
             piece = img[x * self.step_size: x * self.step_size + self.piece_dim,
                     y * self.step_size: y * self.step_size + self.piece_dim]
-        aug = ALBUMENTATIONS_VAL(image=piece)
+        aug = self.ALBUMENTATIONS_VAL(image=piece)
         piece = aug['image']
 
         return piece, self.ids[idx]
@@ -70,13 +72,15 @@ class KidneySampler(Sampler):
 
 class KidneyLoader(Dataset):
     # TODO remove completely empty images
-    def __init__(self, images, masks, image_dims, val=False, piece_dim=512, step_size=0, val_index=0):
+    def __init__(self, images, masks, image_dims, val=False, piece_dim=512,
+                 step_size=0, val_index=0, new_augs=False, size_after_reshape=320):
         self.piece_dim = piece_dim
         self.n_images = len(images)
         self.images = images
         self.masks = masks
         self.step_size = step_size
         self.val = val
+        self.ALBUMENTATIONS_TRAIN, self.ALBUMENTATIONS_VAL = get_augs(new_augs, piece_dim, size_after_reshape)
         if self.val or self.step_size == 0:
             self.ids = [(image_id, x, y)
                         for image_id in range(self.n_images)
@@ -112,11 +116,11 @@ class KidneyLoader(Dataset):
             mask = mask[x * self.step_size: x * self.step_size + self.piece_dim,
                    y * self.step_size: y * self.step_size + self.piece_dim]
         if not self.val:
-            aug = ALBUMENTATIONS_TRAIN(image=piece, mask=mask)
+            aug = self.ALBUMENTATIONS_TRAIN(image=piece, mask=mask)
             piece = aug['image']
             mask = aug['mask']
         else:
-            aug = ALBUMENTATIONS_VAL(image=piece, mask=mask)
+            aug = self.ALBUMENTATIONS_VAL(image=piece, mask=mask)
             piece = aug['image']
             mask = aug['mask']
 

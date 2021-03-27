@@ -7,7 +7,7 @@ from nn.trainer import *
 from nn.predicter import *
 import segmentation_models_pytorch as smp
 import gc
-from dataset.dataloader import KidneySampler, KidneyLoader
+from dataset.dataloader import KidneySampler, KidneyLoader, ValLoader
 import tifffile as tiff
 from torch.optim import AdamW, Adam
 from torch.nn import BCEWithLogitsLoss
@@ -17,17 +17,17 @@ import apex
 
 if __name__ == '__main__':
     args = parse_args()
-    # epochs = args.epochs
+    epochs = args.epochs
     encoder = args.encoder
-    # bs = args.bs
+    bs = args.bs
     prefix = encoder
-    # max_lr = args.max_lr
+    max_lr = args.max_lr
     # fp16 = args.fp16
-    # min_lr = args.min_lr
-    # size = args.size
-    # size_after_reshape = args.size_after_reshape
-    # step_size_ratio = args.step_size_ratio
-    # step_size = int(size * step_size_ratio)
+    min_lr = args.min_lr
+    size = args.size
+    size_after_reshape = args.size_after_reshape
+    step_size_ratio = args.step_size_ratio
+    step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
 
     for weight in weights:
@@ -67,8 +67,10 @@ if __name__ == '__main__':
     gc.collect()
     positive_idxs, negative_idxs = get_indexes(val_index, X_images, Masks, image_dims, size, step_size)
     kid_sampler = KidneySampler(positive_idxs, negative_idxs, not_empty_ratio)
-    train_dataset = KidneyLoader(X_images, Masks, image_dims, False, size, step_size=step_size, val_index=val_index)
-    val_dataset = KidneyLoader(X_images, Masks, image_dims, True, size, val_index=val_index)
+    train_dataset = KidneyLoader(X_images, Masks, image_dims, False, size, step_size=step_size,
+                                 val_index=val_index, new_augs=new_augs, size_after_reshape=size_after_reshape)
+    val_dataset = KidneyLoader(X_images, Masks, image_dims, True, size, val_index=val_index,
+                               new_augs=new_augs, size_after_reshape=size_after_reshape)
     if not use_sampler:
         print("Use full dataset")
         trainloader = DataLoader(train_dataset, batch_size=bs, shuffle=True, num_workers=16)
@@ -164,6 +166,8 @@ if __name__ == '__main__':
             logger.write(f'validation loss = {val_loss}, val dice = {val_dice}\n')
             logger.write('\n')
         print("=====================")
+    with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
+        logger.write(f'Best epochs = {best_dice_epochs}\n')
     model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
     val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
@@ -186,7 +190,8 @@ if __name__ == '__main__':
     del img
     gc.collect()
 
-    test_dataset = ValLoader(X_test_images, img_dims_test, size)
+    test_dataset = ValLoader(X_test_images, img_dims_test, size, new_augs=new_augs,
+                             size_after_reshape=size_after_reshape)
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     if predict_by_epochs == 'best':
         model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
@@ -195,7 +200,7 @@ if __name__ == '__main__':
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
-            model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch}.h5'))
+            model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test)
@@ -208,7 +213,7 @@ if __name__ == '__main__':
             enc = mask2enc(mask)
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
-        s = [str(e) + '_' for e in best_dice_epochs]
+        s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
         sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}.csv', index=False)
 
     # all_enc = []

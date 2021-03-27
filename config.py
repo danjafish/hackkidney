@@ -26,15 +26,14 @@ def parse_args():
     return parser.parse_args()
 
 
-#gpu_number = 4
-size_after_reshape = 320
+# size_after_reshape = 320
 cross_val = False
 use_sampler = True
 use_adaptive_sampler = False
-size = 1024
-bs = 32
+# size = 1024
+# bs = 32
 fp16 = False
-epochs = 30
+# epochs = 30
 epochs_minlr = 0
 not_empty_ratio = 0.5
 val_index = [1, 7, 13]
@@ -46,4 +45,4 @@ predict_by_epochs = 4
 new_augs = False
 weights = {"bce": 1, "dice": 0, "focal": 0}
 s = 'w_'
-step_size = int(size*0.5)
+# step_size = int(size*0.5)

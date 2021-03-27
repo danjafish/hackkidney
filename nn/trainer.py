@@ -1,9 +1,7 @@
 from torch.nn.functional import interpolate
 import torch
 from torch import sigmoid, no_grad, save, load
-from torch.cuda import empty_cache
 from utils.support_func import dice_score, mask_tresholed
-from dataset.dataloader import *
 from config import fp16
 import apex
 from torch.nn import BCEWithLogitsLoss
@@ -14,7 +12,6 @@ def train_one_epoch(model, optim, trainloader, size, loss):
     final_masks = []
     pred_keys = []
     train_loss = 0
-    #loss = BCEWithLogitsLoss()
     model = model.train();
     for i, (x, y_true, key) in enumerate(trainloader):
         x = x.permute((0, 3, 1, 2)).cuda().float()
@@ -48,7 +45,6 @@ def val_one_epoch(model, optim, valloader, size, loss):
     val_masks = []
     val_keys = []
     val_loss = 0.0
-    #loss = BCEWithLogitsLoss()
     with torch.no_grad():
         model = model.eval();
         for i, (x, y_true, key) in enumerate(valloader):
