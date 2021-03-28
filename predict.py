@@ -79,4 +79,4 @@ if __name__ == '__main__':
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
         s = ''.join([str(e) + '_' for e in best_dice_epochs])[:-1]
-        sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap = {overlap}.csv', index=False)
+        sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap_{overlap}.csv', index=False)

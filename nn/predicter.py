@@ -13,7 +13,7 @@ def make_prediction(sample_sub, test_keys, test_masks, model_name,
         enc = mask2enc(mask)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_name}/best_{model_name}_{t}_overlap = {overlap}.csv', index=False)
+    sample_sub.to_csv(f'../{model_name}/best_{model_name}_{t}_overlap_{overlap}.csv', index=False)
 
 
 def make_masks(test_keys, test_masks, n,
