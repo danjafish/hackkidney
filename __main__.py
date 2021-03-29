@@ -82,7 +82,7 @@ if __name__ == '__main__':
         trainloader = DataLoader(train_dataset, batch_size=bs, shuffle=False, num_workers=16, sampler=kid_sampler)
     valloader = DataLoader(val_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     x, y, key = train_dataset[10]
-    print(x.shape, y.shape)
+    print(len(trainloader), len(valloader))
     model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                             decoder_use_batchnorm=False).cuda()
 
