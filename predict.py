@@ -80,7 +80,7 @@ if __name__ == '__main__':
         print('Save masks')
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                np.savetxt(f'{model_path}/{model_path}_mask_{j}.txt', mask)
+                np.savetxt(f'../{model_path}/{model_path}_mask_{j}.txt', mask)
         print('Start making sub')
         for mask in bled_masks:
             t = 0.4
