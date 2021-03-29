@@ -40,7 +40,7 @@ if __name__ == '__main__':
         model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
     else:
         val_index_print = ''.join([str(x) + ',' for x in val_index])
-        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
+        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{size_after_reshape}_{step_size}_{bs}_{epochs}_{val_index_print[:-1]}'
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
