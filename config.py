@@ -1,6 +1,15 @@
 import argparse
 
 
+class StoreDictKeyPair(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        my_dict = {}
+        for kv in values.split(","):
+            k, v = kv.split("=")
+            my_dict[k] = v
+        setattr(namespace, self.dest, my_dict)
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--encoder', type=str, default='efficientnet-b4')
@@ -23,6 +32,8 @@ def parse_args():
     parser.add_argument('--size-after-reshape', type=int, default=320)
     parser.add_argument('--size', type=int, default=1024)
     parser.add_argument('--step-size-ratio', type=float, default=0.5)
+    #parser.add_argument('--loss-weights', type=dict, action=StoreDictKeyPair, metavar="KEY1=VAL1,KEY2=VAL2...")
+    parser.add_argument('--loss-weights', nargs='+', required=True)
     return parser.parse_args()
 
 
@@ -38,11 +49,11 @@ epochs_minlr = 0
 not_empty_ratio = 0.5
 val_index = [1, 7, 13]
 loss_name = 'comboloss'
-max_lr = 7e-4
-min_lr = 3e-6
+#max_lr = 7e-4
+#min_lr = 3e-6
 predict_by_epochs = 4
 # weights_for_pred_epochs = 1 if predict_by_epochs == 'best' else [1]*len(predict_by_epochs)
 new_augs = True
-weights = {"bce": 1, "dice": 0, "focal": 0}
+#weights = {"bce": 1, "dice": 3, "focal": 1}
 s = 'w_'
 # step_size = int(size*0.5)

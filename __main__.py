@@ -21,7 +21,7 @@ if __name__ == '__main__':
     epochs = args.epochs
     encoder = args.encoder
     bs = args.bs
-    prefix = 'unet_pp_'+encoder
+    prefix = encoder
     max_lr = args.max_lr
     # fp16 = args.fp16
     min_lr = args.min_lr
@@ -30,6 +30,8 @@ if __name__ == '__main__':
     step_size_ratio = args.step_size_ratio
     step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
+    loss_weights = args.loss_weights
+    weights = {"bce": loss_weights[0], "dice": loss_weights[1], "focal": loss_weights[2]}
 
     for weight in weights:
         s += str(weights[weight])
