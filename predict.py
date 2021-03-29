@@ -73,6 +73,8 @@ if __name__ == '__main__':
                                   overlap, step_size)
                 bled_masks[n] += mask / len(best_dice_epochs)
         all_enc = []
+        del X_test_images
+        gc.collect()
         if store_masks:
             for j, mask in enumerate(bled_masks):
                 np.savetxt(f'{model_path}/{model_path}_mask_{j}.txt', mask)
