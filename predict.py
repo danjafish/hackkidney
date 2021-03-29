@@ -61,7 +61,8 @@ if __name__ == '__main__':
         model.load_state_dict(load(f'../{model_path}/last_best_model.h5'))
         test_masks, test_keys = predict_test(model, size, testloader, True)
         make_prediction(sample_sub, test_keys, test_masks,
-                        model_path, img_dims_test, size, overlap, step_size, t=0.4)
+                        model_path, img_dims_test, size, overlap,
+                        step_size, t=0.4, store_masks=store_masks)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
@@ -74,7 +75,7 @@ if __name__ == '__main__':
         all_enc = []
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                np.savetxt(f'{model_name}/{model_name}_mask_{j}.txt', mask)
+                np.savetxt(f'{model_path}/{model_path}_mask_{j}.txt', mask)
         for mask in bled_masks:
             t = 0.4
             mask[mask < t] = 0
