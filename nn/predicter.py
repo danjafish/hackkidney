@@ -1,13 +1,17 @@
 from utils.support_func import mask_from_keys_and_preds_test, mask2enc
+import numpy as np
 
 
 def make_prediction(sample_sub, test_keys, test_masks, model_name,
-                    img_dims_test, size, overlap=False, step_size=256, t=0.4):
+                    img_dims_test, size, overlap=False, step_size=256, t=0.4, store_masks=False):
     all_enc = []
     for n in range(len(sample_sub)):
         img_n_keys = [(i, k) for i, k in enumerate(test_keys) if k[0] == n]
         mask = mask_from_keys_and_preds_test(img_n_keys, test_masks,
                                              n, img_dims_test, size, overlap, step_size)
+        if store_masks:
+            np.savetxt(f'{model_name}/{model_name}_mask_{n}.txt', mask)
+
         mask[mask < t] = 0
         mask[mask >= t] = 1
         enc = mask2enc(mask)

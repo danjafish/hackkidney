@@ -31,6 +31,7 @@ if __name__ == '__main__':
     step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
     loss_weights = args.loss_weights
+    store_masks = args.store_masks
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
 
     for weight in weights:
@@ -129,7 +130,8 @@ if __name__ == '__main__':
         model, optim, pred_keys, final_masks, \
         train_loss, train_dice = train_one_epoch(model, optim, trainloader, size, loss)
         print(f"train loss = {train_loss}")
-
+        del pred_keys, final_masks
+        gc.collect()
         model, optim, val_keys, val_masks, val_loss = val_one_epoch(model, optim, valloader, size, loss)
         print(f"val loss = {val_loss}")
 
@@ -137,7 +139,7 @@ if __name__ == '__main__':
             scheduler.step()
         m = 0
         for img_number in val_index:
-            val_mask11, val_dice = calculate_dice(Masks, val_keys, val_masks, img_number, size, image_dims)
+            _, val_dice = calculate_dice(Masks, val_keys, val_masks, img_number, size, image_dims)
             with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
                 logger.write(f'dice on image {img_number} = {val_dice} ')
             print(f'dice on image {img_number} = {val_dice}')
@@ -168,6 +170,8 @@ if __name__ == '__main__':
             logger.write(f'train loss = {train_loss}, train dice (micro) = {train_dice}\n')
             logger.write(f'validation loss = {val_loss}, val dice = {val_dice}\n')
             logger.write('\n')
+        del val_keys, val_masks
+        gc.collect()
         print("=====================")
     with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
         logger.write(f'Best epochs = {best_dice_epochs}\n')
@@ -209,6 +213,9 @@ if __name__ == '__main__':
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
                 bled_masks[n] += mask/len(best_dice_epochs)
         all_enc = []
+        if store_masks:
+            for j, mask in enumerate(bled_masks):
+                np.savetxt(f'{model_name}/{model_name}_mask_{j}.txt', mask)
         for mask in bled_masks:
             t = 0.4
             mask[mask < t] = 0

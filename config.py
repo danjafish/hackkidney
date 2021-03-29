@@ -34,6 +34,9 @@ def parse_args():
     parser.add_argument('--step-size-ratio', type=float, default=0.5)
     #parser.add_argument('--loss-weights', type=dict, action=StoreDictKeyPair, metavar="KEY1=VAL1,KEY2=VAL2...")
     parser.add_argument('--loss-weights', nargs='+', required=True)
+    parser.add_argument('--store-masks', dest='store_masks', action='store_true')
+    parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
+    parser.set_defaults(store_masks=False)
     return parser.parse_args()
 
 
@@ -45,6 +48,7 @@ use_adaptive_sampler = False
 # bs = 32
 fp16 = False
 # epochs = 30
+#store_masks = False
 epochs_minlr = 0
 not_empty_ratio = 0.5
 val_index = [1, 7, 13]
