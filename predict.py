@@ -66,6 +66,7 @@ if __name__ == '__main__':
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
+            print(f'Predict by epoch {epoch}')
             model.load_state_dict(load(f'../{model_path}/{model_path}_{epoch}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
