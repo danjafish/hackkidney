@@ -69,10 +69,11 @@ if __name__ == '__main__':
             print(f'Predict by epoch {epoch}')
             model.load_state_dict(load(f'../{model_path}/{model_path}_{epoch}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
+            print(f'Start make masks for epoch {epoch}')
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size,
                                   overlap, step_size)
-                bled_masks[n] += mask / len(best_dice_epochs)
+                bled_masks[n] += np.round(mask, 6) / len(best_dice_epochs)
         all_enc = []
         del X_test_images
         gc.collect()
