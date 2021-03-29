@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('--size', type=int, default=1024)
     parser.add_argument('--step-size-ratio', type=float, default=0.5)
     parser.add_argument('--model-path', type=str)
+    parser.add_argument('--store-masks', dest='store_masks', action='store_true')
+    parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
     return parser.parse_args()
 
 

@@ -25,6 +25,7 @@ if __name__ == '__main__':
     step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
     model_path = args.model_path
+    store_masks = args.store_masks
     overlap = True
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -71,6 +72,9 @@ if __name__ == '__main__':
                                   overlap, step_size)
                 bled_masks[n] += mask / len(best_dice_epochs)
         all_enc = []
+        if store_masks:
+            for j, mask in enumerate(bled_masks):
+                np.savetxt(f'{model_name}/{model_name}_mask_{j}.txt', mask)
         for mask in bled_masks:
             t = 0.4
             mask[mask < t] = 0
