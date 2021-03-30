@@ -217,7 +217,7 @@ if __name__ == '__main__':
         gc.collect()
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                np.savetxt(f'{model_name}/{model_name}_mask_{j}.txt', mask)
+                np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
         for mask in bled_masks:
             t = 0.4
             mask[mask < t] = 0
