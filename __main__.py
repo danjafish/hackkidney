@@ -202,7 +202,7 @@ if __name__ == '__main__':
     if predict_by_epochs == 'best':
         model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
         test_masks, test_keys = predict_test(model, size, testloader, True)
-        del X_images
+        del X_test_images
         gc.collect()
         make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test,
                         size, t=0.4, store_masks=store_masks)
@@ -215,7 +215,7 @@ if __name__ == '__main__':
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
                 bled_masks[n] += mask/len(best_dice_epochs)
         all_enc = []
-        del X_images
+        del X_test_images
         gc.collect()
         if store_masks:
             for j, mask in enumerate(bled_masks):
