@@ -14,6 +14,7 @@ from torch.optim import AdamW, Adam
 from torch.nn import BCEWithLogitsLoss
 import os
 import apex
+import h5py
 
 
 if __name__ == '__main__':
@@ -128,7 +129,7 @@ if __name__ == '__main__':
                                          shuffle=False, num_workers=16, sampler=kid_sampler)
 
         model, optim, pred_keys, final_masks, \
-        train_loss, train_dice = train_one_epoch(model, optim, trainloader, size, loss)
+        train_loss, train_dice = train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=False)
         print(f"train loss = {train_loss}")
         del pred_keys, final_masks
         gc.collect()
@@ -204,7 +205,7 @@ if __name__ == '__main__':
     if predict_by_epochs == 'best':
         model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
         test_masks, test_keys = predict_test(model, size, testloader, True)
-        del X_images
+        del X_test_images
         gc.collect()
         make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test,
                         size, t=0.4, store_masks=store_masks)
@@ -217,11 +218,13 @@ if __name__ == '__main__':
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
                 bled_masks[n] += mask/len(best_dice_epochs)
         all_enc = []
-        del X_images
+        del X_test_images
         gc.collect()
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
+                with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
+                    dset = f.create_dataset("mask", data=mask, dtype='f')
+                #np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
         for mask in bled_masks:
             t = 0.4
             mask[mask < t] = 0

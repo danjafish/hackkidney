@@ -7,7 +7,7 @@ import apex
 from torch.nn import BCEWithLogitsLoss
 
 
-def train_one_epoch(model, optim, trainloader, size, loss):
+def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=True):
     train_dice = 0
     final_masks = []
     pred_keys = []
@@ -32,7 +32,8 @@ def train_one_epoch(model, optim, trainloader, size, loss):
 
         for pred, true_mask in zip(torch.sigmoid(big_masks).detach().cpu().numpy(),
                                    big_ground_true.detach().cpu().numpy()):
-            final_masks.append(pred)
+            if store_train_masks:
+                final_masks.append(pred)
             train_dice += dice_score(mask_tresholed(pred), true_mask) / x.shape[0]
         train_loss += l.item() / len(trainloader)
     #         if i%300 == 10:
