@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('--size', type=int, default=1024)
     parser.add_argument('--step-size-ratio', type=float, default=0.5)
     parser.add_argument('--model-path', type=str)
+    parser.add_argument('--predict-by-epochs', type=str, default='all')
+    parser.add_argument('--best-dice-epochs', nargs='+', required=True)
     parser.add_argument('--store-masks', dest='store_masks', action='store_true')
     parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
     return parser.parse_args()
@@ -43,10 +45,10 @@ val_index = [1, 7, 13]
 loss_name = 'comboloss'
 max_lr = 7e-4
 min_lr = 3e-6
-predict_by_epochs = 4
+# predict_by_epochs = 4
 # weights_for_pred_epochs = 1 if predict_by_epochs == 'best' else [1]*len(predict_by_epochs)
 new_augs = True
 weights = {"bce": 1, "dice": 0, "focal": 0}
 s = 'w_'
-best_dice_epochs = [0,1,2,3]
+# best_dice_epochs = [0,1,2,3]
 # step_size = int(size*0.5)

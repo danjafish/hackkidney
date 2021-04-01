@@ -20,6 +20,8 @@ if __name__ == '__main__':
     # fp16 = args.fp16
     min_lr = args.min_lr
     size = args.size
+    predict_by_epochs = args.predict_by_epochs
+    best_dice_epochs = [int(x) for x in args.best_dice_epochs]
     size_after_reshape = args.size_after_reshape
     step_size_ratio = args.step_size_ratio
     step_size = int(size * step_size_ratio)
