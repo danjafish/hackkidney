@@ -36,9 +36,6 @@ def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=Tru
                 final_masks.append(pred)
             train_dice += dice_score(mask_tresholed(pred), true_mask) / x.shape[0]
         train_loss += l.item() / len(trainloader)
-    #         if i%300 == 10:
-    #             #print(i, train_loss)
-    #             break
     return model, optim, pred_keys, final_masks, train_loss, train_dice / len(trainloader)
 
 

@@ -32,11 +32,12 @@ def parse_args():
     parser.add_argument('--size-after-reshape', type=int, default=320)
     parser.add_argument('--size', type=int, default=1024)
     parser.add_argument('--step-size-ratio', type=float, default=0.5)
-    #parser.add_argument('--loss-weights', type=dict, action=StoreDictKeyPair, metavar="KEY1=VAL1,KEY2=VAL2...")
-    parser.add_argument('--loss-weights', nargs='+', required=True)
-    parser.add_argument('--store-masks', dest='store_masks', action='store_true')
-    parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
+    parser.add_argument('--loss-weights', nargs='+', required=False)
+    feature_parser = parser.add_mutually_exclusive_group(required=False)
+    feature_parser.add_argument('--store-masks', dest='store_masks', action='store_true')
+    feature_parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
     parser.set_defaults(store_masks=False)
+    parser.set_defaults(loss_weights=[1, 3, 1])
     return parser.parse_args()
 
 
