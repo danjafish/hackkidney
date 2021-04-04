@@ -85,7 +85,7 @@ class KidneyLoader(Dataset):
         self.augumentations = ['albu'] if augumentations is None else augumentations
 
         if "cutmix" in self.augumentations:
-            self.cutmix = CutMix(p=0.25, max_h_size=self.piece_dim // 5, max_w_size=self.piece_dim // 5)
+            self.cutmix = CutMix(p=0.25, max_h_size=self.piece_dim // 5, max_w_size=self.piece_dim // 5, full_mask=False)
             print('Train with cutmix')
 
         self.ALBUMENTATIONS_TRAIN, self.ALBUMENTATIONS_VAL = get_augs(new_augs, piece_dim, size_after_reshape)
@@ -133,10 +133,10 @@ class KidneyLoader(Dataset):
                 source_piece, source_mask = self.get_piece(source_rdm_idx)
                 piece, mask = self.cutmix.transform(
                     target_piece=piece.copy(), target_mask=mask.copy(),
-                    source_piece=source_piece, source_mask=source_mask
+                    source_piece=source_piece.copy(), source_mask=source_mask.copy()
                 )
             if 'albu' in self.augumentations:
-                aug = self.ALBUMENTATIONS_TRAIN(image=piece, mask=mask)
+                aug = self.ALBUMENTATIONS_TRAIN(image=piece.copy(), mask=mask.copy())
                 piece = aug['image']
                 mask = aug['mask']
         else:

@@ -2,11 +2,13 @@ import albumentations as albu
 import cv2
 import numpy as np
 
+
 class CutMix:
-    def __init__(self, p=1.0, max_h_size=80, max_w_size=80):
+    def __init__(self, p=1.0, max_h_size=80, max_w_size=80, full_mask=True):
         self.max_h = max_h_size
         self.max_w = max_w_size
         self.p = p
+        self.full_mask = full_mask
 
     def transform(self, target_piece, target_mask, source_piece, source_mask):
         """
@@ -15,14 +17,18 @@ class CutMix:
         if np.random.rand() < self.p:
             # cut relevant piece from source
             source_submask, source_subpiece = self.get_subframe_with_mask(source_mask, source_piece)
-
             # get random position of target
             y_min, y_max, x_min, x_max = self.get_subframe_idx(source_shape=source_submask.shape,
                                                                target_shape=target_mask.shape)
 
             # create mixed image
-            target_mask[y_min: y_max, x_min: x_max] = source_submask
-            target_piece[y_min: y_max, x_min: x_max] = source_subpiece
+            if self.full_mask:
+                target_piece[y_min: y_max, x_min: x_max] = source_subpiece
+                target_mask[y_min: y_max, x_min: x_max] = source_submask
+            else:
+                target_mask[y_min: y_max, x_min: x_max][source_submask != 0] = source_submask[source_submask != 0]
+                target_piece[y_min: y_max, x_min: x_max][source_submask != 0] = source_subpiece[source_submask != 0]
+            #
 
         return target_piece, target_mask
 
