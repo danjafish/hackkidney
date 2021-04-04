@@ -86,6 +86,7 @@ class KidneyLoader(Dataset):
 
         if "cutmix" in self.augumentations:
             self.cutmix = CutMix(p=0.25, max_h_size=self.piece_dim // 5, max_w_size=self.piece_dim // 5)
+            print('Train with cutmix')
 
         self.ALBUMENTATIONS_TRAIN, self.ALBUMENTATIONS_VAL = get_augs(new_augs, piece_dim, size_after_reshape)
         if self.val or self.step_size == 0:
