@@ -1,6 +1,6 @@
 from torch.utils.data.sampler import Sampler
 from torch.utils.data import Dataset, DataLoader
-from dataset.augmentations import get_augs
+from dataset.augmentations import get_augs, CutMix
 import numpy as np
 import cv2
 
@@ -72,14 +72,21 @@ class KidneySampler(Sampler):
 
 class KidneyLoader(Dataset):
     # TODO remove completely empty images
-    def __init__(self, images, masks, image_dims, val=False, piece_dim=512,
-                 step_size=0, val_index=0, new_augs=False, size_after_reshape=320):
+    def __init__(self, images, masks, image_dims, positive_idxs, val=False, piece_dim=512,
+                 step_size=0, val_index=0, new_augs=False, size_after_reshape=320,
+                 augumentations = None):
         self.piece_dim = piece_dim
         self.n_images = len(images)
         self.images = images
         self.masks = masks
         self.step_size = step_size
         self.val = val
+        self.positive_idxs = positive_idxs
+        self.augumentations = ['albu'] if augumentations is None else augumentations
+
+        if "cutmix" in self.augumentations:
+            self.cutmix = CutMix(p=0.25, max_h_size=self.piece_dim // 5, max_w_size=self.piece_dim // 5)
+
         self.ALBUMENTATIONS_TRAIN, self.ALBUMENTATIONS_VAL = get_augs(new_augs, piece_dim, size_after_reshape)
         if self.val or self.step_size == 0:
             self.ids = [(image_id, x, y)
@@ -100,12 +107,12 @@ class KidneyLoader(Dataset):
         else:
             self.ids = [x for x in self.ids if x[0] not in self.val_idx]
 
-    def __getitem__(self, idx):
+    def get_piece(self, idx):
         image_id, x, y = self.ids[idx]
 
         img = self.images[image_id]
         mask = self.masks[image_id]
-        if (self.val or self.step_size == 0):
+        if self.val or self.step_size == 0:
             piece = img[x * self.piece_dim: (x + 1) * self.piece_dim,
                     y * self.piece_dim: (y + 1) * self.piece_dim]
             mask = mask[x * self.piece_dim: (x + 1) * self.piece_dim,
@@ -115,10 +122,22 @@ class KidneyLoader(Dataset):
                     y * self.step_size: y * self.step_size + self.piece_dim]
             mask = mask[x * self.step_size: x * self.step_size + self.piece_dim,
                    y * self.step_size: y * self.step_size + self.piece_dim]
+        return piece, mask
+
+    def __getitem__(self, idx):
+        piece, mask = self.get_piece(idx)
         if not self.val:
-            aug = self.ALBUMENTATIONS_TRAIN(image=piece, mask=mask)
-            piece = aug['image']
-            mask = aug['mask']
+            if "cutmix" in self.augumentations:
+                source_rdm_idx = self.positive_idxs[np.random.randint(len(self.positive_idxs))]
+                source_piece, source_mask = self.get_piece(source_rdm_idx)
+                piece, mask = self.cutmix.transform(
+                    target_piece=piece.copy(), target_mask=mask.copy(),
+                    source_piece=source_piece, source_mask=source_mask
+                )
+            if 'albu' in self.augumentations:
+                aug = self.ALBUMENTATIONS_TRAIN(image=piece, mask=mask)
+                piece = aug['image']
+                mask = aug['mask']
         else:
             aug = self.ALBUMENTATIONS_VAL(image=piece, mask=mask)
             piece = aug['image']

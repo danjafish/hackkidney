@@ -1,5 +1,51 @@
 import albumentations as albu
 import cv2
+import numpy as np
+
+class CutMix:
+    def __init__(self, p=1.0, max_h_size=80, max_w_size=80):
+        self.max_h = max_h_size
+        self.max_w = max_w_size
+        self.p = p
+
+    def transform(self, target_piece, target_mask, source_piece, source_mask):
+        """
+        Use subframes of source image to augment target image.
+        """
+        if np.random.rand() < self.p:
+            # cut relevant piece from source
+            source_submask, source_subpiece = self.get_subframe_with_mask(source_mask, source_piece)
+
+            # get random position of target
+            y_min, y_max, x_min, x_max = self.get_subframe_idx(source_shape=source_submask.shape,
+                                                               target_shape=target_mask.shape)
+
+            # create mixed image
+            target_mask[y_min: y_max, x_min: x_max] = source_submask
+            target_piece[y_min: y_max, x_min: x_max] = source_subpiece
+
+        return target_piece, target_mask
+
+    def get_subframe_idx(self, source_shape, target_shape):
+        y = np.random.randint(0, target_shape[0] - source_shape[0])
+        x = np.random.randint(0, target_shape[1] - source_shape[1])
+        return (
+            y, y + source_shape[0],
+            x, x + source_shape[1]
+        )
+
+    def get_subframe_with_mask(self, mask, piece):
+        x_center = np.argmax(mask.sum(0))
+        y_center = np.argmax(mask.sum(1))
+
+        w_size = min(self.max_w // 2, x_center, mask.shape[0] - x_center)
+        h_size = min(self.max_h // 2, y_center, mask.shape[1] - y_center)
+
+        idx = (y_center - h_size, y_center + h_size, x_center - w_size, x_center + w_size)
+        return self.get_slice(mask, *idx), self.get_slice(piece, *idx)
+
+    def get_slice(self, x, y_min, y_max, x_min, x_max):
+        return x[y_min: y_max, x_min: x_max]
 
 
 def get_augs(new_augs, size, size_after_reshape):

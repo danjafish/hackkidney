@@ -33,6 +33,8 @@ if __name__ == '__main__':
     gpu_number = args.gpu_number
     loss_weights = args.loss_weights
     store_masks = args.store_masks
+    cutmix = args.cutmix
+    augumentations = ['albu', 'cutmix'] if cutmix else None
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
 
     for weight in weights:
@@ -72,9 +74,10 @@ if __name__ == '__main__':
     gc.collect()
     positive_idxs, negative_idxs = get_indexes(val_index, X_images, Masks, image_dims, size, step_size)
     kid_sampler = KidneySampler(positive_idxs, negative_idxs, not_empty_ratio)
-    train_dataset = KidneyLoader(X_images, Masks, image_dims, False, size, step_size=step_size,
-                                 val_index=val_index, new_augs=new_augs, size_after_reshape=size_after_reshape)
-    val_dataset = KidneyLoader(X_images, Masks, image_dims, True, size, val_index=val_index,
+    train_dataset = KidneyLoader(X_images, Masks, image_dims, positive_idxs, False, size, step_size=step_size,
+                                 val_index=val_index, new_augs=new_augs, augumentations=augumentations,
+                                 size_after_reshape=size_after_reshape)
+    val_dataset = KidneyLoader(X_images, Masks, image_dims, positive_idxs, True, size, val_index=val_index,
                                new_augs=new_augs, size_after_reshape=size_after_reshape)
     if not use_sampler:
         print("Use full dataset")
