@@ -33,6 +33,8 @@ if __name__ == '__main__':
     gpu_number = args.gpu_number
     loss_weights = args.loss_weights
     store_masks = args.store_masks
+    cutmix = args.cutmix
+    augumentations = ['albu', 'cutmix'] if cutmix else None
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
 
     for weight in weights:
@@ -42,7 +44,7 @@ if __name__ == '__main__':
         model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
     else:
         val_index_print = ''.join([str(x) + ',' for x in val_index])
-        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}'
+        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}'
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
@@ -70,11 +72,12 @@ if __name__ == '__main__':
 
     del img, mask, shape
     gc.collect()
-    positive_idxs, negative_idxs = get_indexes(val_index, X_images, Masks, image_dims, size, step_size)
+    positive_idxs, negative_idxs = get_indexes(val_index, X_images, Masks, image_dims, size, step_size, t=0.01)
     kid_sampler = KidneySampler(positive_idxs, negative_idxs, not_empty_ratio)
-    train_dataset = KidneyLoader(X_images, Masks, image_dims, False, size, step_size=step_size,
-                                 val_index=val_index, new_augs=new_augs, size_after_reshape=size_after_reshape)
-    val_dataset = KidneyLoader(X_images, Masks, image_dims, True, size, val_index=val_index,
+    train_dataset = KidneyLoader(X_images, Masks, image_dims, positive_idxs, False, size, step_size=step_size,
+                                 val_index=val_index, new_augs=new_augs, augumentations=augumentations,
+                                 size_after_reshape=size_after_reshape)
+    val_dataset = KidneyLoader(X_images, Masks, image_dims, positive_idxs, True, size, val_index=val_index,
                                new_augs=new_augs, size_after_reshape=size_after_reshape)
     if not use_sampler:
         print("Use full dataset")

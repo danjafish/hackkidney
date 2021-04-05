@@ -74,7 +74,8 @@ def dice_score(pred, targs):
     return 2.0 * (pred*targs).sum() / ((pred+targs).sum() + 1e-10)
 
 
-def get_indexes(val_index, X_images, Masks, image_dims, size, step_size):
+def get_indexes(val_index, X_images, Masks, image_dims, size, step_size, t=0):
+    t = t * size * size
     positive_idxs = []
     negative_idxs = []
     ids = [(image_id, x, y)
@@ -89,9 +90,9 @@ def get_indexes(val_index, X_images, Masks, image_dims, size, step_size):
         image = X_images[image_id]
         image = image[x * step_size : x * step_size + size,
                     y * step_size : y * step_size + size]
-        if np.sum(image) == 0:
+        if np.sum(image != 0) <= t:
             continue
-        if np.sum(mask) == 0:
+        if np.sum(mask) <= t:
             negative_idxs.append(ind)
         else:
             positive_idxs.append(ind)
