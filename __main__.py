@@ -40,9 +40,6 @@ if __name__ == '__main__':
     for weight in weights:
         s += str(weights[weight])
         s += '-'
-    if cross_val:
-        model_name = f'resize_cv_{s}_{size}_{bs}_{epochs}'
-    else:
         val_index_print = ''.join([str(x) + ',' for x in val_index])
         model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}'
 
