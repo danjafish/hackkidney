@@ -181,6 +181,8 @@ if __name__ == '__main__':
     val_keys, val_masks = predict_data(model, valloader, size, True)
     val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
     print(f"Dice on val (average) with TTA = {val_dice}")
+    with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
+        logger.write(f'dice on val with TTA = {val_dice}\n')
 
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
     test_paths = sample_sub.id.values
