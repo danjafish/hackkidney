@@ -241,7 +241,7 @@ for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
     print('Train fold ', fold, 'val indexes = ', val_index_)
     with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
         logger.write(f'fold {k} val index {val_index_}\n')
-    masks = train_fold(val_index_, X_images_, Masks_, image_dims_)
+    masks = train_fold(val_index_, X_images_, Masks_, image_dims_,k)
     if len(sum_masks) == 0:
         sum_masks = masks
     else:
