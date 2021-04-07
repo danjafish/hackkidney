@@ -100,13 +100,13 @@ def train_fold(val_index, X_images, Masks, image_dims, fold):
         if predict_by_epochs != 'best':
             if len(best_dice_epochs) < predict_by_epochs:
                 best_dice_epochs.append((epoch, val_dice))
-                save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+                save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}_{fold}.h5")
                 print('Best epochs updated. ', best_dice_epochs)
             else:
                 ind = np.argmin([el[1] for el in best_dice_epochs])
                 if best_dice_epochs[ind][1] < val_dice:
                     best_dice_epochs[ind] = (epoch, val_dice)
-                    save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+                    save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}_{fold}.h5")
                     print('Best epochs updated. ', best_dice_epochs)
                 else:
                     print('No change in best epochs: ', best_dice_epochs)
