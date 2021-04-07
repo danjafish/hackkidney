@@ -248,8 +248,12 @@ for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
         for i in range(len(sum_masks)):
             sum_masks[i] = sum_masks[i] + masks[i]
     k += 1
+    del masks
+    gc.collect()
     #if k == 2:
     #    break
+del X_images_, Masks_, image_dims_
+gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
 all_enc = []
 sum_masks = np.array(sum_masks)/k
