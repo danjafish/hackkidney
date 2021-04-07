@@ -18,7 +18,7 @@ import h5py
 from sklearn.model_selection import KFold
 
 
-def train_fold(val_index, X_images, Masks, image_dims):
+def train_fold(val_index, X_images, Masks, image_dims, fold):
     positive_idxs, negative_idxs = get_indexes(val_index, X_images, Masks, image_dims, size, step_size, t=0.01)
     kid_sampler = KidneySampler(positive_idxs, negative_idxs, not_empty_ratio)
     train_dataset = KidneyLoader(X_images, Masks, image_dims, positive_idxs, False, size, step_size=step_size,
@@ -113,7 +113,7 @@ def train_fold(val_index, X_images, Masks, image_dims):
         # val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
         if val_dice > max_val_dice:
             max_val_dice = val_dice
-            save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
+            save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}_{fold}.h5")
             save(model.state_dict(), f"../{model_name}/last_best_model.h5")
 
         print("Dice on train micro ", train_dice)
@@ -166,7 +166,7 @@ def train_fold(val_index, X_images, Masks, image_dims):
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
-            model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}.h5'))
+            model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}_{fold}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
@@ -238,7 +238,9 @@ kf = KFold(n_splits=5, shuffle=True, random_state=2021)
 sum_masks = []
 k = 0
 for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
-    print('Train fold ', fold)
+    print('Train fold ', fold, 'val indexes = ', val_index_)
+    with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
+        logger.write(f'fold {k} val index {val_index_}\n')
     masks = train_fold(val_index_, X_images_, Masks_, image_dims_)
     if len(sum_masks) == 0:
         sum_masks = masks
