@@ -176,9 +176,19 @@ def train_fold(val_index, X_images, Masks, image_dims, fold):
         gc.collect()
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
+                with h5py.File(f'../{model_name}/{model_name}_mask_{j}_fold_{fold}.txt', "w") as f:
                     dset = f.create_dataset("mask", data=mask, dtype='f')
                 # np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
+        for mask in bled_masks:
+            t = 0.4
+            mask[mask < t] = 0
+            mask[mask >= t] = 1
+            enc = mask2enc(mask)
+            all_enc.append(enc[0])
+        sample_sub.predicted = all_enc
+        s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
+        sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}_fold_{fold}.csv', index=False)
+
         return bled_masks
 
 
@@ -241,7 +251,7 @@ for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
     print('Train fold ', fold, 'val indexes = ', val_index_)
     with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
         logger.write(f'fold {k} val index {val_index_}\n')
-    masks = train_fold(val_index_, X_images_, Masks_, image_dims_,k)
+    masks = train_fold(val_index_, X_images_, Masks_, image_dims_, k)
     if len(sum_masks) == 0:
         sum_masks = masks
     else:
@@ -250,8 +260,8 @@ for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
     k += 1
     del masks
     gc.collect()
-    #if k == 2:
-    #    break
+    if k == 2:
+        break
 del X_images_, Masks_, image_dims_
 gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
