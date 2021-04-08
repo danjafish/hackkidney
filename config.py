@@ -38,6 +38,7 @@ def parse_args():
     feature_parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
     parser.add_argument('--cutmix', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
+    parser.add_argument('--not-empty-ratio', type=float, default=0.5)
     parser.set_defaults(store_masks=False)
     parser.set_defaults(loss_weights=[1, 3, 1])
     return parser.parse_args()
@@ -52,7 +53,6 @@ fp16 = False
 # epochs = 30
 #store_masks = False
 epochs_minlr = 0
-not_empty_ratio = 0.5
 val_index = [1, 7, 13]
 loss_name = 'comboloss'
 #max_lr = 7e-4

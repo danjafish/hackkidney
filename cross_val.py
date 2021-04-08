@@ -210,6 +210,7 @@ gpu_number = args.gpu_number
 loss_weights = args.loss_weights
 store_masks = args.store_masks
 cutmix = args.cutmix
+not_empty_ratio = args.not_empty_ratio
 parallel = args.parallel
 augumentations = ['albu', 'cutmix'] if cutmix else None
 weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}

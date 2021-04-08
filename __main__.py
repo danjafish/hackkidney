@@ -33,6 +33,7 @@ if __name__ == '__main__':
     gpu_number = args.gpu_number
     loss_weights = args.loss_weights
     store_masks = args.store_masks
+    not_empty_ratio = args.not_empty_ratio
     cutmix = args.cutmix
     parallel = args.parallel
     augumentations = ['albu', 'cutmix'] if cutmix else None
