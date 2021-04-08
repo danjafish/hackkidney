@@ -11,7 +11,7 @@ import gc
 from dataset.dataloader import KidneySampler, KidneyLoader, ValLoader
 import tifffile as tiff
 from torch.optim import AdamW, Adam
-from torch.nn import BCEWithLogitsLoss
+from torch.nn import BCEWithLogitsLoss, DataParallel
 import os
 import apex
 import h5py
@@ -34,6 +34,7 @@ if __name__ == '__main__':
     loss_weights = args.loss_weights
     store_masks = args.store_masks
     cutmix = args.cutmix
+    parallel = args.parallel
     augumentations = ['albu', 'cutmix'] if cutmix else None
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
 
@@ -87,6 +88,8 @@ if __name__ == '__main__':
     print(len(trainloader), len(valloader))
     model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                             decoder_use_batchnorm=False).cuda()
+    if parallel:
+        model = DataParallel(model).cuda()
 
     if loss_name == 'comboloss':
         print("Use combo loss")
