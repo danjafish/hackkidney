@@ -16,6 +16,7 @@ if __name__ == '__main__':
     encoder = args.encoder
     bs = args.bs
     prefix = encoder
+    thr = args.thr
     size = args.size
     predict_by_epochs = args.predict_by_epochs
     best_dice_epochs = [int(x) for x in args.best_dice_epochs]
@@ -75,7 +76,7 @@ if __name__ == '__main__':
         test_masks, test_keys = predict_test(model, size, testloader, True)
         make_prediction(sample_sub, test_keys, test_masks,
                         model_path, img_dims_test, size, overlap,
-                        step_size, t=0.4, store_masks=store_masks)
+                        step_size, t=thr, store_masks=store_masks)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
@@ -99,7 +100,7 @@ if __name__ == '__main__':
                 np.savetxt(f'../{model_path}/{model_path}_mask_{j}.txt', mask)
         print('Start making sub')
         for mask in bled_masks:
-            t = 0.4
+            t = thr
             mask[mask < t] = 0
             mask[mask >= t] = 1
             enc = mask2enc(mask)

@@ -32,6 +32,7 @@ def parse_args():
     parser.add_argument('--size-after-reshape', type=int, default=320)
     parser.add_argument('--size', type=int, default=1024)
     parser.add_argument('--step-size-ratio', type=float, default=0.5)
+    parser.add_argument('--thr', type=float, default=0.4)
     parser.add_argument('--loss-weights', nargs='+', required=False)
     feature_parser = parser.add_mutually_exclusive_group(required=False)
     feature_parser.add_argument('--store-masks', dest='store_masks', action='store_true')

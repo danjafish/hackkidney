@@ -24,6 +24,7 @@ if __name__ == '__main__':
     bs = args.bs
     prefix = 'unet_pp_'+encoder
     max_lr = args.max_lr
+    thr = args.thr
     # fp16 = args.fp16
     min_lr = args.min_lr
     size = args.size
@@ -214,7 +215,7 @@ if __name__ == '__main__':
         del X_test_images
         gc.collect()
         make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test,
-                        size, t=0.4, store_masks=store_masks)
+                        size, t=thr, store_masks=store_masks)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
@@ -232,7 +233,7 @@ if __name__ == '__main__':
                     dset = f.create_dataset("mask", data=mask, dtype='f')
                 #np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
         for mask in bled_masks:
-            t = 0.4
+            t = thr
             mask[mask < t] = 0
             mask[mask >= t] = 1
             enc = mask2enc(mask)

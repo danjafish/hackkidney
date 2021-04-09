@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument('--model-path', type=str)
     parser.add_argument('--predict-by-epochs', type=str, default='all')
     parser.add_argument('--best-dice-epochs', nargs='+', required=True)
+    parser.add_argument('--thr', type=float, default=0.4)
     parser.add_argument('--fold', type=int, default=0)
     parser.add_argument('--store-masks', dest='store_masks', action='store_true')
     parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')

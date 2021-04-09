@@ -186,7 +186,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
                         dset = f.create_dataset("mask", data=mask, dtype='f')
                     # np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
             for mask in bled_masks:
-                t = 0.4
+                t = thr
                 mask[mask < t] = 0
                 mask[mask >= t] = 1
                 enc = mask2enc(mask)
@@ -204,6 +204,7 @@ args = parse_args()
 epochs = args.epochs
 encoder = args.encoder
 bs = args.bs
+thr = args.thr
 prefix = 'unet_pp_'+encoder
 max_lr = args.max_lr
  # fp16 = args.fp16
