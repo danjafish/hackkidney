@@ -18,7 +18,7 @@ if __name__ == '__main__':
     size = args.size
     predict_by_epochs = args.predict_by_epochs
     best_dice_epochs = [int(x) for x in args.best_dice_epochs]
-    folds = [int(x) for x in args.folds]
+    fold = args.folds
     size_after_reshape = args.size_after_reshape
     step_size_ratio = args.step_size_ratio
     step_size = int(size * step_size_ratio)
@@ -26,6 +26,7 @@ if __name__ == '__main__':
     model_path = args.model_path
     store_masks = args.store_masks
     cros_val = args.cros_val
+    model_name = args.model_name
     overlap = True
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -34,8 +35,16 @@ if __name__ == '__main__':
     seed_everything(2021)
     data_path = '../data/'
     data = pd.read_csv(data_path + 'train.csv')
-    model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
-                     decoder_use_batchnorm=False).cuda()
+    if model_name == 'unet':
+        model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                         decoder_use_batchnorm=False).cuda()
+    elif model_name == 'unet++':
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                                 decoder_use_batchnorm=False).cuda()
+    else:
+        print('Model name is incorrect. Set to unet++')
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                                 decoder_use_batchnorm=False).cuda()
 
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
     test_paths = sample_sub.id.values
@@ -67,7 +76,10 @@ if __name__ == '__main__':
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
             print(f'Predict by epoch {epoch}')
-            model.load_state_dict(load(f'../{model_path}/{model_path}_{epoch}.h5'))
+            if not cros_val:
+                model.load_state_dict(load(f'../{model_path}/{model_path}_{epoch}.h5'))
+            else:
+                model.load_state_dict(load(f'../{model_path}/{model_path}_{epoch}_{fold}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             print(f'Start make masks for epoch {epoch}')
             for n in range(len(sample_sub)):
@@ -90,4 +102,7 @@ if __name__ == '__main__':
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
         s = ''.join([str(e) + '_' for e in best_dice_epochs])[:-1]
-        sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap_{overlap}.csv', index=False)
+        if not cros_val:
+            sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap_{overlap}.csv', index=False)
+        else:
+            sample_sub.to_csv(f'../{model_path}/mean_{model_path}_fold_{fold}_{s}_overlap_{overlap}.csv', index=False)

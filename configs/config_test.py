@@ -17,10 +17,10 @@ def parse_args():
     parser.add_argument('--model-path', type=str)
     parser.add_argument('--predict-by-epochs', type=str, default='all')
     parser.add_argument('--best-dice-epochs', nargs='+', required=True)
-    parser.add_argument('--folds', nargs='+', required=False)
+    parser.add_argument('--fold', type=int, default=0)
     parser.add_argument('--store-masks', dest='store_masks', action='store_true')
     parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
-    parser.add_argument('--model', type=str, default='unet++')
+    parser.add_argument('--model-name', type=str, default='unet++')
     parser.add_argument('--cros-val', action='store_true', default=False)
     return parser.parse_args()
 
