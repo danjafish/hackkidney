@@ -2,7 +2,7 @@ import pandas as pd
 from torch.cuda import empty_cache
 import numpy as np
 from torch.utils.data import DataLoader
-from config import use_sampler, use_adaptive_sampler, fp16, epochs_minlr, not_empty_ratio, loss_name, predict_by_epochs, new_augs, parse_args
+from config import use_sampler, use_adaptive_sampler, fp16, epochs_minlr, loss_name, predict_by_epochs, new_augs, parse_args
 from utils.support_func import *
 from nn.trainer import *
 from nn.predicter import *

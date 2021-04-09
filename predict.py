@@ -12,22 +12,20 @@ import os
 
 if __name__ == '__main__':
     args = parse_args()
-    epochs = args.epochs
     encoder = args.encoder
     bs = args.bs
     prefix = encoder
-    max_lr = args.max_lr
-    # fp16 = args.fp16
-    min_lr = args.min_lr
     size = args.size
     predict_by_epochs = args.predict_by_epochs
     best_dice_epochs = [int(x) for x in args.best_dice_epochs]
+    folds = [int(x) for x in args.folds]
     size_after_reshape = args.size_after_reshape
     step_size_ratio = args.step_size_ratio
     step_size = int(size * step_size_ratio)
     gpu_number = args.gpu_number
     model_path = args.model_path
     store_masks = args.store_masks
+    cros_val = args.cros_val
     overlap = True
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
