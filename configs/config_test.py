@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument('--not-store-masks', dest='store_masks', action='store_false')
     parser.add_argument('--model-name', type=str, default='unet++')
     parser.add_argument('--cros-val', action='store_true', default=False)
+    parser.add_argument('--parallel', action='store_true', default=False)
     return parser.parse_args()
 
 

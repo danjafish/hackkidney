@@ -2,6 +2,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from configs.config_test import *
 from dataset.dataloader import ValLoader
+from torch.nn import DataParallel
 from utils.support_func import *
 from nn.trainer import *
 from nn.predicter import *
@@ -27,6 +28,7 @@ if __name__ == '__main__':
     store_masks = args.store_masks
     cros_val = args.cros_val
     model_name = args.model_name
+    parallel = args.parallel
     overlap = True
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -45,6 +47,8 @@ if __name__ == '__main__':
         print('Model name is incorrect. Set to unet++')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                                  decoder_use_batchnorm=False).cuda()
+    if parallel:
+        model = DataParallel(model).cuda()
 
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
     test_paths = sample_sub.id.values
