@@ -18,7 +18,7 @@ if __name__ == '__main__':
     size = args.size
     predict_by_epochs = args.predict_by_epochs
     best_dice_epochs = [int(x) for x in args.best_dice_epochs]
-    fold = args.folds
+    fold = args.fold
     size_after_reshape = args.size_after_reshape
     step_size_ratio = args.step_size_ratio
     step_size = int(size * step_size_ratio)
