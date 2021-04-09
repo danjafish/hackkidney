@@ -135,7 +135,8 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
         del val_keys, val_masks
         gc.collect()
     if predict:
-        best_dice_epochs = [int(x,1) for x in args.best_dice_epochs]
+        if not train:
+            best_dice_epochs = [(int(x), 1) for x in args.best_dice_epochs]
         sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
         test_paths = sample_sub.id.values
         print('Start test')
@@ -170,6 +171,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
         else:
             bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
             for epoch in best_dice_epochs:
+                print(f'Start predict for epoch {epoch[0]}')
                 model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}_{fold}.h5'))
                 test_masks, test_keys = predict_test(model, size, testloader, True)
                 for n in range(len(sample_sub)):
