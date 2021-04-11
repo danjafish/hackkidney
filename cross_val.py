@@ -101,7 +101,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
             if predict_by_epochs != 'best':
                 if len(best_dice_epochs) < predict_by_epochs:
                     best_dice_epochs.append((epoch, val_dice))
-                    save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}_{fold}.h5")
+                    #save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}_{fold}.h5")
                     print('Best epochs updated. ', best_dice_epochs)
                 else:
                     ind = np.argmin([el[1] for el in best_dice_epochs])
@@ -279,12 +279,13 @@ gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
 all_enc = []
 sum_masks = np.array(sum_masks)/k
-for mask in sum_masks:
-    t = 0.4
-    mask[mask < t] = 0
-    mask[mask >= t] = 1
-    enc = mask2enc(mask)
-    all_enc.append(enc[0])
-sample_sub.predicted = all_enc
-sample_sub.to_csv(f'../{model_name}/{model_name}.csv', index=False)
+for tt in range(2,7):
+    t = tt/10
+    for mask in sum_masks:
+        mask[mask < t] = 0
+        mask[mask >= t] = 1
+        enc = mask2enc(mask)
+        all_enc.append(enc[0])
+    sample_sub.predicted = all_enc
+    sample_sub.to_csv(f'../{model_name}/{model_name}_t_{t}.csv', index=False)
 
