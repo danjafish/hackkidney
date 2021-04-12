@@ -267,7 +267,7 @@ class StableBCELoss(nn.Module):
 
 
 class ComboLoss(nn.Module):
-    def __init__(self, weights, per_image=False, channel_weights=[1, 0.5, 0.5], channel_losses=None):
+    def __init__(self, weights, per_image=False, channel_weights=[1, 1, 1], channel_losses=None):
         super().__init__()
         self.weights = weights
         self.bce = StableBCELoss()

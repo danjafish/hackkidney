@@ -90,14 +90,16 @@ if __name__ == '__main__':
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size,
                                   overlap, step_size)
-                bled_masks[n] += np.round(mask, 6) / len(best_dice_epochs)
+                bled_masks[n] += np.round(mask, 4) / len(best_dice_epochs)
         all_enc = []
         del X_test_images
         gc.collect()
         print('Save masks')
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                np.savetxt(f'../{model_path}/{model_path}_mask_{j}.txt', mask)
+                with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
+                    dset = f.create_dataset("mask", data=mask, dtype='f')
+
         print('Start making sub')
         for mask in bled_masks:
             t = thr
