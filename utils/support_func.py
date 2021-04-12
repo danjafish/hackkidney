@@ -49,6 +49,18 @@ def mask_tresholed(mask, t = 0.5):
     return mask
 
 
+def search_for_best_threshold(Masks, val_keys, val_masks, val_index, image_dims, size):
+    best_dice = 0
+    for t in range(3, 8):
+        val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size, t / 10)
+        print(f"Dice on val (avarege) t = {t / 10} = {val_dice}")
+        if val_dice > best_dice:
+            best_t = t / 10
+            best_dice = val_dice
+    print(f'best t = {best_t}')
+    return best_t, best_dice
+
+
 def calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size, t=0.5):
     m = 0
     for img_number in val_index:

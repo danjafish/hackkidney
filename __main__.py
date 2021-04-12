@@ -36,6 +36,7 @@ if __name__ == '__main__':
     store_masks = args.store_masks
     not_empty_ratio = args.not_empty_ratio
     cutmix = args.cutmix
+    overlap = args.overlap
     parallel = args.parallel
     augumentations = ['albu', 'cutmix'] if cutmix else None
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
@@ -184,11 +185,13 @@ if __name__ == '__main__':
         logger.write(f'Best epochs = {best_dice_epochs}\n')
     model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
-    val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
-    print(f"Dice on val (average) with TTA = {val_dice}")
+    #val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
+    best_t, best_val_dice = search_for_best_threshold(Masks, val_keys, val_masks, val_index, image_dims, size)
+    print(f"Dice on val (average) with TTA = {best_val_dice} with t = {best_t}")
     with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
-        logger.write(f'dice on val with TTA = {val_dice}\n')
-
+        logger.write(f'dice on val with TTA = {best_val_dice} with t = {best_t}\n')
+    del val_keys, val_masks
+    gc.collect()
     sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
     test_paths = sample_sub.id.values
     print('Start test')
@@ -207,7 +210,7 @@ if __name__ == '__main__':
     gc.collect()
 
     test_dataset = ValLoader(X_test_images, img_dims_test, size, new_augs=new_augs,
-                             size_after_reshape=size_after_reshape)
+                             size_after_reshape=size_after_reshape, overlap=overlap, step_size=step_size)
     testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     if predict_by_epochs == 'best':
         model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
@@ -215,14 +218,14 @@ if __name__ == '__main__':
         del X_test_images
         gc.collect()
         make_prediction(sample_sub, test_keys, test_masks, model_name, img_dims_test,
-                        size, t=thr, store_masks=store_masks)
+                        size, t=thr, store_masks=store_masks, overlap=overlap, step_size=step_size)
     else:
         bled_masks = [np.zeros(s[:2]) for s in img_dims_test]
         for epoch in best_dice_epochs:
             model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}.h5'))
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
-                mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
+                mask = make_masks(test_keys, test_masks, n, img_dims_test, size, overlap=overlap, step_size=step_size)
                 bled_masks[n] += mask/len(best_dice_epochs)
         all_enc = []
         del X_test_images
@@ -232,15 +235,15 @@ if __name__ == '__main__':
                 with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
                     dset = f.create_dataset("mask", data=mask, dtype='f')
                 #np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
+        t = best_t
         for mask in bled_masks:
-            t = thr
             mask[mask < t] = 0
             mask[mask >= t] = 1
             enc = mask2enc(mask)
             all_enc.append(enc[0])
         sample_sub.predicted = all_enc
         s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
-        sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}.csv', index=False)
+        sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}_t_{t}.csv', index=False)
 
     # all_enc = []
     # for n in range(len(sample_sub)):

@@ -68,7 +68,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
             empty_cache()
             dice = 0
             print(f"epoch number {epoch}, lr = {optim.param_groups[0]['lr']}")
-            if (use_sampler & use_adaptive_sampler):
+            if use_sampler & use_adaptive_sampler:
                 if epoch < 10:
                     kid_sampler = KidneySampler(positive_idxs, negative_idxs, 0.2)
                     trainloader = DataLoader(train_dataset, batch_size=bs,
@@ -130,8 +130,11 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
             logger.write(f'Best epochs = {best_dice_epochs}\n')
         model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
         val_keys, val_masks = predict_data(model, valloader, size, True)
-        val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
-        print(f"Dice on val (average) with TTA = {val_dice}")
+        #val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
+        best_t, best_val_dice = search_for_best_threshold(Masks, val_keys, val_masks, val_index, image_dims, size)
+        print(f"Dice on val (average) with TTA = {best_val_dice} with t = {best_t}")
+        with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
+            logger.write(f'dice on val with TTA = {best_val_dice} with t = {best_t}\n')
         del val_keys, val_masks
         gc.collect()
     if predict:
@@ -155,7 +158,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
         gc.collect()
 
         test_dataset = ValLoader(X_test_images, img_dims_test, size, new_augs=new_augs,
-                                 size_after_reshape=size_after_reshape)
+                                 size_after_reshape=size_after_reshape, overlap=overlap, step_size=step_size)
         testloader = DataLoader(test_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
         if predict_by_epochs == 'best':
             model.load_state_dict(load(f'../{model_name}/last_best_model.h5'))
@@ -164,7 +167,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
             gc.collect()
             masks = []
             for n in range(len(sample_sub)):
-                mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
+                mask = make_masks(test_keys, test_masks, n, img_dims_test, size, overlap=overlap, step_size=step_size)
                 masks.append(mask)
             return masks
 
@@ -175,7 +178,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
                 model.load_state_dict(load(f'../{model_name}/{model_name}_{epoch[0]}_{fold}.h5'))
                 test_masks, test_keys = predict_test(model, size, testloader, True)
                 for n in range(len(sample_sub)):
-                    mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
+                    mask = make_masks(test_keys, test_masks, n, img_dims_test, size, overlap=overlap, step_size=step_size)
                     bled_masks[n] += mask / len(best_dice_epochs)
             all_enc = []
             del X_test_images
@@ -185,15 +188,16 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
                     with h5py.File(f'../{model_name}/{model_name}_mask_{j}_fold_{fold}.txt', "w") as f:
                         dset = f.create_dataset("mask", data=mask, dtype='f')
                     # np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
-            for mask in bled_masks:
-                t = thr
-                mask[mask < t] = 0
-                mask[mask >= t] = 1
-                enc = mask2enc(mask)
-                all_enc.append(enc[0])
-            sample_sub.predicted = all_enc
-            s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
-            sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}_fold_{fold}.csv', index=False)
+            for tt in range(2, 7):
+                t = tt/10
+                for mask in bled_masks:
+                    mask[mask < t] = 0
+                    mask[mask >= t] = 1
+                    enc = mask2enc(mask)
+                    all_enc.append(enc[0])
+                sample_sub.predicted = all_enc
+                s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
+                sample_sub.to_csv(f'../{model_name}/mean_{model_name}_{s}_fold_{fold}_t_{t}_overlap_{overlap}.csv', index=False)
 
             return bled_masks
     else:
@@ -220,6 +224,7 @@ cutmix = args.cutmix
 not_empty_ratio = args.not_empty_ratio
 parallel = args.parallel
 predict = args.predict
+overlap = args.overlap
 train = args.train
 augumentations = ['albu', 'cutmix'] if cutmix else None
 weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
@@ -279,7 +284,7 @@ gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
 all_enc = []
 sum_masks = np.array(sum_masks)/k
-for tt in range(2,7):
+for tt in range(2, 7):
     t = tt/10
     for mask in sum_masks:
         mask[mask < t] = 0
@@ -287,5 +292,5 @@ for tt in range(2,7):
         enc = mask2enc(mask)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
-    sample_sub.to_csv(f'../{model_name}/{model_name}_t_{t}.csv', index=False)
+    sample_sub.to_csv(f'../{model_name}/{model_name}_t_{t}_overlap_{overlap}.csv', index=False)
 
