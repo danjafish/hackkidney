@@ -5,10 +5,45 @@ from torch import nn
 from torch.autograd import Variable
 import math
 from torch.optim.optimizer import Optimizer, required
-import os
 import random
 from PIL import Image, ImageDraw
-import matplotlib
+import os
+import glob
+
+
+def remove_models(DIR):
+    """
+    example:
+    DIR = ./unet_pp_efficientnet-b2_True_False_w_1-3-1-_1024_512_320_32_30_1,7,13_cutmix_False_lookahead_True/
+    last "/" - required
+    """
+    log_file = glob.glob(DIR + "*.log")
+    assert len(log_file) == 1, f"wrong .log files count: {len(log_file)}"
+
+    with open(log_file[0]) as f:
+        for idx, line in enumerate(f.readlines()):
+            line = line.strip()
+            if 'Best epochs' in line:
+                best_epochs = [f"_{i.strip('()').split(',')[0]}.h5" for i in
+                               line.split('Best epochs = ')[1].replace('[', '').replace(']', '').split('), (')]
+
+    weigths = glob.glob(DIR + "*.h5")
+    weigths.remove(DIR + 'last_best_model.h5')
+
+    # select files to remove
+    toRemove = []
+    f = False
+    for h5 in weigths:
+        for epoch_suffix in best_epochs:
+            if epoch_suffix in h5:
+                f = True
+        if f:
+            f = False
+            continue
+        toRemove.append(h5)
+
+    for pth in toRemove:
+        os.remove(pth)
 
 
 def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=512):
@@ -51,7 +86,7 @@ def mask_tresholed(mask, t = 0.5):
 
 def search_for_best_threshold(Masks, val_keys, val_masks, val_index, image_dims, size):
     best_dice = 0
-    for t in range(3, 8):
+    for t in range(2, 8):
         val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size, t / 10)
         print(f"Dice on val (avarege) t = {t / 10} = {val_dice}")
         if val_dice > best_dice:
