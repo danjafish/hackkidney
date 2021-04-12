@@ -10,6 +10,7 @@ import segmentation_models_pytorch as smp
 import gc
 import tifffile as tiff
 import os
+import h5py
 
 if __name__ == '__main__':
     args = parse_args()
