@@ -98,7 +98,7 @@ if __name__ == '__main__':
         print('Save masks')
         if store_masks:
             for j, mask in enumerate(bled_masks):
-                with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
+                with h5py.File(f'../{model_path}/{model_path}_mask_{j}.txt', "w") as f:
                     dset = f.create_dataset("mask", data=mask, dtype='f')
 
         print('Start making sub')
