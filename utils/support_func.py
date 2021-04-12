@@ -9,6 +9,44 @@ import os
 import random
 from PIL import Image, ImageDraw
 import matplotlib
+import matplotlib.pyplot as plt
+
+import os, glob
+
+
+def remove_models(DIR):
+    """
+    example:
+    DIR = ./unet_pp_efficientnet-b2_True_False_w_1-3-1-_1024_512_320_32_30_1,7,13_cutmix_False_lookahead_True/
+    last "/" - required
+    """
+    log_file = glob.glob(DIR + "*.log")
+    assert len(log_file) == 1, f"wrong .log files count: {len(log_file)}"
+
+    with open(log_file[0]) as f:
+        for idx, line in enumerate(f.readlines()):
+            line = line.strip()
+            if 'Best epochs' in line:
+                best_epochs = [f"_{i.strip('()').split(',')[0]}.h5" for i in
+                               line.split('Best epochs = ')[1].replace('[', '').replace(']', '').split('), (')]
+
+    weigths = glob.glob(DIR + "*.h5")
+    weigths.remove(DIR + 'last_best_model.h5')
+
+    # select files to remove
+    toRemove = []
+    f = False
+    for h5 in weigths:
+        for epoch_suffix in best_epochs:
+            if epoch_suffix in h5:
+                f = True
+        if f == True:
+            f = False
+            continue
+        toRemove.append(h5)
+
+    for pth in toRemove:
+        os.remove(pth)
 
 
 def mask_from_keys_and_preds(keys, masks, image_number, image_dims, piece_dim=512):
@@ -31,8 +69,8 @@ def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims
         if overlap:
             ind_x = key[1] * step_size
             ind_y = key[2] * step_size
-            big_mask[ind_x: (ind_x+piece_dim), ind_y: (ind_y+piece_dim)] += mask
-            c[ind_x: (ind_x+piece_dim), ind_y: (ind_y+piece_dim)] += 1
+            big_mask[ind_x: (ind_x + piece_dim), ind_y: (ind_y + piece_dim)] += mask
+            c[ind_x: (ind_x + piece_dim), ind_y: (ind_y + piece_dim)] += 1
         else:
             big_mask[key[1] * piece_dim: (key[1] + 1) * piece_dim,
             key[2] * piece_dim: (key[2] + 1) * piece_dim] = mask
@@ -43,7 +81,7 @@ def mask_from_keys_and_preds_test(img_keys, final_mask, image_number, image_dims
     return big_mask
 
 
-def mask_tresholed(mask, t = 0.5):
+def mask_tresholed(mask, t=0.5):
     mask[mask < t] = 0
     mask[mask >= t] = 1
     return mask
@@ -56,12 +94,12 @@ def calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size, t
         # test
         print(f'dice on image {img_number} = {val_dice}')
         m += val_dice
-    val_dice = m/len(val_index)
+    val_dice = m / len(val_index)
     return val_dice
 
 
 def calculate_dice(Masks, keys, masks, image_number, piece_dim, image_dims, t=0.5):
-    img_n_keys = [(i,k) for i,k in enumerate(keys) if k[0] == image_number]
+    img_n_keys = [(i, k) for i, k in enumerate(keys) if k[0] == image_number]
     mask = mask_from_keys_and_preds(img_n_keys, masks, image_number, image_dims, piece_dim)
     true_mask = Masks[image_number]
     dice_s = dice_score(mask_tresholed(mask, t), true_mask)
@@ -71,7 +109,7 @@ def calculate_dice(Masks, keys, masks, image_number, piece_dim, image_dims, t=0.
 def dice_score(pred, targs):
     if (np.sum(pred) == 0) & (np.sum(targs) == 0):
         return 1.0
-    return 2.0 * (pred*targs).sum() / ((pred+targs).sum() + 1e-10)
+    return 2.0 * (pred * targs).sum() / ((pred + targs).sum() + 1e-10)
 
 
 def get_indexes(val_index, X_images, Masks, image_dims, size, step_size, t=0):
@@ -79,17 +117,17 @@ def get_indexes(val_index, X_images, Masks, image_dims, size, step_size, t=0):
     positive_idxs = []
     negative_idxs = []
     ids = [(image_id, x, y)
-            for image_id in range(len(X_images))
-            for x in range(0, (image_dims[image_id][0] // step_size) - 1)
-            for y in range((image_dims[image_id][1] // step_size) - 1)]
+           for image_id in range(len(X_images))
+           for x in range(0, (image_dims[image_id][0] // step_size) - 1)
+           for y in range((image_dims[image_id][1] // step_size) - 1)]
     ids = [x for x in ids if x[0] not in val_index]
     for ind, (image_id, x, y) in enumerate(ids):
         mask = Masks[image_id]
-        mask = mask[x * step_size : x * step_size + size,
-                    y * step_size : y * step_size + size]
+        mask = mask[x * step_size: x * step_size + size,
+               y * step_size: y * step_size + size]
         image = X_images[image_id]
-        image = image[x * step_size : x * step_size + size,
-                    y * step_size : y * step_size + size]
+        image = image[x * step_size: x * step_size + size,
+                y * step_size: y * step_size + size]
         if np.sum(image != 0) <= t:
             continue
         if np.sum(mask) <= t:
@@ -116,9 +154,9 @@ def enc2mask(enk, shape):
     nums = enk.split(" ")[1::2]
     starts = [int(x) for x in starts]
     nums = [int(x) for x in nums]
-    mask = np.zeros(shape[0]*shape[1])
-    for s,n in zip(starts, nums):
-        mask[s-1:s+n] = 1
+    mask = np.zeros(shape[0] * shape[1])
+    for s, n in zip(starts, nums):
+        mask[s - 1:s + n] = 1
     mask = mask.reshape(shape).T
     return mask
 
@@ -127,7 +165,8 @@ def mask2enc(mask):
     pixels = mask.T.flatten()
     encs = []
     p = (pixels == 1).astype(np.int8)
-    if p.sum() == 0: encs.append(np.nan)
+    if p.sum() == 0:
+        encs.append(np.nan)
     else:
         p = np.concatenate([[0], p, [0]])
         runs = np.where(p[1:] != p[:-1])[0] + 1
@@ -143,6 +182,7 @@ def seed_everything(seed=2020):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
+
 
 def draw_structure(structures, im):
     """
@@ -288,8 +328,9 @@ class ComboLoss(nn.Module):
                 channels = targets.size(1)
                 for c in range(channels):
                     if not self.channel_losses or k in self.channel_losses[c]:
-                        val += self.channel_weights[c] * self.mapping[k](sigmoid_input[:, c, ...] if k in self.expect_sigmoid else outputs[:, c, ...],
-                                               targets[:, c, ...])
+                        val += self.channel_weights[c] * self.mapping[k](
+                            sigmoid_input[:, c, ...] if k in self.expect_sigmoid else outputs[:, c, ...],
+                            targets[:, c, ...])
 
             else:
                 val = self.mapping[k](sigmoid_input if k in self.expect_sigmoid else outputs, targets)
@@ -376,7 +417,7 @@ def lovasz_sigmoid(probas, labels, per_image=False, ignore=None):
     """
     if per_image:
         loss = mean(lovasz_sigmoid_flat(*flatten_binary_scores(prob.unsqueeze(0), lab.unsqueeze(0), ignore))
-                          for prob, lab in zip(probas, labels))
+                    for prob, lab in zip(probas, labels))
     else:
         loss = lovasz_sigmoid_flat(*flatten_binary_scores(probas, labels, ignore))
     return loss
@@ -397,8 +438,10 @@ def lovasz_sigmoid_flat(probas, labels):
     loss = torch.dot(errors_sorted, Variable(lovasz_grad(fg_sorted)))
     return loss
 
+
 def symmetric_lovasz(outputs, targets, ):
     return (lovasz_hinge(outputs, targets) + lovasz_hinge(-outputs, 1 - targets)) / 2
+
 
 def mean(l, ignore_nan=False, empty=0):
     """
@@ -431,6 +474,7 @@ class LovaszLoss(nn.Module):
         outputs = outputs.contiguous()
         targets = targets.contiguous()
         return symmetric_lovasz(outputs, targets)
+
 
 class LovaszLossSigmoid(nn.Module):
     def __init__(self, ignore_index=255, per_image=True):
@@ -534,7 +578,7 @@ class RAdam(Optimizer):
                     if N_sma >= 5:
                         step_size = math.sqrt(
                             (1 - beta2_t) * (N_sma - 4) / (N_sma_max - 4) * (N_sma - 2) / N_sma * N_sma_max / (
-                                        N_sma_max - 2)) / (1 - beta1 ** state['step'])
+                                    N_sma_max - 2)) / (1 - beta1 ** state['step'])
                     elif self.degenerated_to_sgd:
                         step_size = 1.0 / (1 - beta1 ** state['step'])
                     else:
@@ -555,3 +599,77 @@ class RAdam(Optimizer):
                     p.data.copy_(p_data_fp32)
 
         return loss
+
+
+from collections import defaultdict
+from itertools import chain
+from torch.optim import Optimizer
+import torch
+import warnings
+
+
+class Lookahead(Optimizer):
+    def __init__(self, optimizer, k=5, alpha=0.5):
+        self.optimizer = optimizer
+        self.k = k
+        self.alpha = alpha
+        self.param_groups = self.optimizer.param_groups
+        self.state = defaultdict(dict)
+        self.fast_state = self.optimizer.state
+        for group in self.param_groups:
+            group["counter"] = 0
+
+    def update(self, group):
+        for fast in group["params"]:
+            param_state = self.state[fast]
+            if "slow_param" not in param_state:
+                param_state["slow_param"] = torch.zeros_like(fast.data)
+                param_state["slow_param"].copy_(fast.data)
+            slow = param_state["slow_param"]
+            slow += (fast.data - slow) * self.alpha
+            fast.data.copy_(slow)
+
+    def update_lookahead(self):
+        for group in self.param_groups:
+            self.update(group)
+
+    def step(self, closure=None):
+        loss = self.optimizer.step(closure)
+        for group in self.param_groups:
+            if group["counter"] == 0:
+                self.update(group)
+            group["counter"] += 1
+            if group["counter"] >= self.k:
+                group["counter"] = 0
+        return loss
+
+    def state_dict(self):
+        fast_state_dict = self.optimizer.state_dict()
+        slow_state = {
+            (id(k) if isinstance(k, torch.Tensor) else k): v
+            for k, v in self.state.items()
+        }
+        fast_state = fast_state_dict["state"]
+        param_groups = fast_state_dict["param_groups"]
+        return {
+            "fast_state": fast_state,
+            "slow_state": slow_state,
+            "param_groups": param_groups,
+        }
+
+    def load_state_dict(self, state_dict):
+        slow_state_dict = {
+            "state": state_dict["slow_state"],
+            "param_groups": state_dict["param_groups"],
+        }
+        fast_state_dict = {
+            "state": state_dict["fast_state"],
+            "param_groups": state_dict["param_groups"],
+        }
+        super(Lookahead, self).load_state_dict(slow_state_dict)
+        self.optimizer.load_state_dict(fast_state_dict)
+        self.fast_state = self.optimizer.state
+
+    def add_param_group(self, param_group):
+        param_group["counter"] = 0
+        self.optimizer.add_param_group(param_group)

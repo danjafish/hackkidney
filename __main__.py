@@ -16,13 +16,12 @@ import os
 import apex
 import h5py
 
-
 if __name__ == '__main__':
     args = parse_args()
     epochs = args.epochs
     encoder = args.encoder
     bs = args.bs
-    prefix = 'unet_pp_'+encoder
+    prefix = 'unet_pp_' + encoder
     max_lr = args.max_lr
     # fp16 = args.fp16
     min_lr = args.min_lr
@@ -36,6 +35,7 @@ if __name__ == '__main__':
     not_empty_ratio = args.not_empty_ratio
     cutmix = args.cutmix
     parallel = args.parallel
+    lookahead_param = True
     augumentations = ['albu', 'cutmix'] if cutmix else None
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         s += str(weights[weight])
         s += '-'
         val_index_print = ''.join([str(x) + ',' for x in val_index])
-        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}'
+        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}_lookahead_{lookahead_param}'
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     x, y, key = train_dataset[10]
     print(len(trainloader), len(valloader))
     model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
-                            decoder_use_batchnorm=False).cuda()
+                             decoder_use_batchnorm=False).cuda()
     if parallel:
         model = DataParallel(model).cuda()
 
@@ -99,17 +99,23 @@ if __name__ == '__main__':
         print("Use BCE Loss")
         loss = BCEWithLogitsLoss()
     optim = AdamW(model.parameters(), lr=max_lr)
+    if lookahead_param:
+        print("Use Lookahead")
+        lookahead = Lookahead(optim, k=5, alpha=0.5)
     if fp16:
         model, optimizer = apex.amp.initialize(
             model,
             optim,
             opt_level='O1')
     metric = smp.utils.losses.DiceLoss()
-    SchedulerClass_cos = torch.optim.lr_scheduler.CosineAnnealingLR
-    scheduler_params_cos = dict(
-        T_max=epochs, eta_min=min_lr
-    )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, **scheduler_params_cos)
+    # SchedulerClass_cos = torch.optim.lr_scheduler.CosineAnnealingLR
+    # scheduler_params_cos = dict(
+    #    T_max=epochs, eta_min=min_lr
+    # )
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, **scheduler_params_cos)
+
+    scheduler_params_cosr = dict(T_0=4, T_mult=2, eta_min=0, last_epoch=-1)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optim, **scheduler_params_cosr)
     # ---- Start train loop here ----- #
     print('Start train')
     min_val_loss = 100
@@ -132,8 +138,15 @@ if __name__ == '__main__':
                 trainloader = DataLoader(train_dataset, batch_size=bs,
                                          shuffle=False, num_workers=16, sampler=kid_sampler)
 
-        model, optim, pred_keys, final_masks, \
-        train_loss, train_dice = train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=False)
+        if lookahead_param:
+            model, lookahead, pred_keys, final_masks, train_loss, train_dice = train_one_epoch(model, lookahead,
+                                                                                               trainloader, size, loss,
+                                                                                               store_train_masks=False)
+        else:
+            model, optim, pred_keys, final_masks, train_loss, train_dice = train_one_epoch(model, optim, trainloader,
+                                                                                           size, loss,
+                                                                                           store_train_masks=False)
+
         print(f"train loss = {train_loss}")
         del pred_keys, final_masks
         gc.collect()
@@ -222,7 +235,7 @@ if __name__ == '__main__':
             test_masks, test_keys = predict_test(model, size, testloader, True)
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size)
-                bled_masks[n] += mask/len(best_dice_epochs)
+                bled_masks[n] += mask / len(best_dice_epochs)
         all_enc = []
         del X_test_images
         gc.collect()
@@ -230,7 +243,7 @@ if __name__ == '__main__':
             for j, mask in enumerate(bled_masks):
                 with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
                     dset = f.create_dataset("mask", data=mask, dtype='f')
-                #np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
+                # np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
         for mask in bled_masks:
             t = 0.4
             mask[mask < t] = 0
