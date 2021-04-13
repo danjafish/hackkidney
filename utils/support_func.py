@@ -673,3 +673,60 @@ class Lookahead(Optimizer):
     def add_param_group(self, param_group):
         param_group["counter"] = 0
         self.optimizer.add_param_group(param_group)
+        
+class CosineWarmapOnPlateau:
+    def __init__(self, optimizer, T_max=7, base_lr = 7e-4, min_lr=3e-6, eta_min=3e-6, warm_factor = 2, patience=3):
+        self.optimizer = optimizer
+        self.T_max = T_max
+        self.base_lr = base_lr
+        self.min_lr = min_lr
+        self.eta_min = eta_min
+        self.warm_factor = warm_factor
+        self.patience = patience
+        
+        self.num_bad_epochs = 0
+        self.best = None
+        
+        self.period = 1
+        
+        
+    def is_better(self, current, best):
+        #rel_epsilon = self.threshold + 1. #self.threshold = 1e-4
+        #return a > best * rel_epsilon
+        if not self.best:
+            self.best = current
+            return True
+        _is_better = current > best
+        if _is_better:
+            self.best = current
+            self.num_bad_epochs = 0
+        return _is_better
+        
+    def step(self, metric, last_epoch):
+        current = float(metric)
+        _is_better = self.is_better(current, self.best)
+        if  self.optimizer.param_groups[0]['lr'] > self.eta_min:
+            
+            new_lr = (1 + math.cos(math.pi * self.period / self.T_max)) / \
+            (1 + math.cos(math.pi * (self.period - 1) / self.T_max)) * \
+            (self.optimizer.param_groups[0]['lr'] - self.eta_min) + self.eta_min
+            self.period += 1
+            self.optimizer.param_groups[0]['lr'] = new_lr
+        else:
+            if not _is_better:
+                self.num_bad_epochs += 1
+            if self.num_bad_epochs > self.patience:
+                self._warm_up()
+                self.num_bad_epochs=0
+            
+    def _warm_up(self):
+        new_lr = self.base_lr / self.warm_factor
+        self.optimizer.param_groups[0]['lr'] = new_lr
+        self.warm_factor=self.warm_factor * 2
+        self.period=1
+        
+        
+        
+        
+        
+        
