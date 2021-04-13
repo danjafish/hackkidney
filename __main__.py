@@ -235,7 +235,7 @@ if __name__ == '__main__':
                 with h5py.File(f'../{model_name}/{model_name}_mask_{j}.txt', "w") as f:
                     dset = f.create_dataset("mask", data=mask, dtype='f')
                 #np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
-        t = best_t
+        t = 0.4#best_t
         for mask in bled_masks:
             mask[mask < t] = 0
             mask[mask >= t] = 1
