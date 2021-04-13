@@ -35,7 +35,7 @@ if __name__ == '__main__':
     not_empty_ratio = args.not_empty_ratio
     cutmix = args.cutmix
     parallel = args.parallel
-    lookahead_param = True
+    
     augumentations = ['albu', 'cutmix'] if cutmix else None
     weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         s += str(weights[weight])
         s += '-'
         val_index_print = ''.join([str(x) + ',' for x in val_index])
-        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}_lookahead_{lookahead_param}'
+        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}_lookahead_{lookahead_param}_opt_Radam_CosWarmScheduler'
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
@@ -98,15 +98,13 @@ if __name__ == '__main__':
     else:
         print("Use BCE Loss")
         loss = BCEWithLogitsLoss()
-    optim = AdamW(model.parameters(), lr=max_lr)
+    #optim = AdamW(model.parameters(), lr=max_lr)
+    optim = RAdam(model.parameters(), lr=max_lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0, degenerated_to_sgd=True)
     if lookahead_param:
         print("Use Lookahead")
         lookahead = Lookahead(optim, k=5, alpha=0.5)
     if fp16:
-        model, optimizer = apex.amp.initialize(
-            model,
-            optim,
-            opt_level='O1')
+        model, optimizer = apex.amp.initialize( model, optim, opt_level='O1')
     metric = smp.utils.losses.DiceLoss()
     # SchedulerClass_cos = torch.optim.lr_scheduler.CosineAnnealingLR
     # scheduler_params_cos = dict(
@@ -114,8 +112,11 @@ if __name__ == '__main__':
     # )
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, **scheduler_params_cos)
 
-    scheduler_params_cosr = dict(T_0=4, T_mult=2, eta_min=0, last_epoch=-1)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optim, **scheduler_params_cosr)
+    #scheduler_params_cosr = dict(T_0=4, T_mult=2, eta_min=0, last_epoch=-1)
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optim, **scheduler_params_cosr)
+    
+    scheduler_params_coswarm = dict(T_max=7, base_lr = max_lr, min_lr=min_lr, eta_min=min_lr, warm_factor = 2, patience=3)
+    scheduler = CosineWarmapOnPlateau(optim, **scheduler_params_coswarm)
     # ---- Start train loop here ----- #
     print('Start train')
     min_val_loss = 100
@@ -152,7 +153,7 @@ if __name__ == '__main__':
         gc.collect()
         model, optim, val_keys, val_masks, val_loss = val_one_epoch(model, optim, valloader, size, loss)
         print(f"val loss = {val_loss}")
-        if epoch < epochs:
+        if (epoch < epochs) and (scheduler.__class__.__name__ != 'CosineWarmapOnPlateau'):
             scheduler.step()
         m = 0
         for img_number in val_index:
@@ -178,6 +179,11 @@ if __name__ == '__main__':
                 else:
                     print('No change in best epochs: ', best_dice_epochs)
         # val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)
+        
+        
+        if scheduler.__class__.__name__ == 'CosineWarmapOnPlateau':
+            scheduler.step(val_dice, epoch)
+        
         if val_dice > max_val_dice:
             max_val_dice = val_dice
             save(model.state_dict(), f"../{model_name}/{model_name}_{epoch}.h5")
@@ -194,6 +200,9 @@ if __name__ == '__main__':
         print("=====================")
     with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
         logger.write(f'Best epochs = {best_dice_epochs}\n')
+        
+        
+        
     model.load_state_dict(load(f"../{model_name}/last_best_model.h5"))
     val_keys, val_masks = predict_data(model, valloader, size, True)
     val_dice = calc_average_dice(Masks, val_keys, val_masks, val_index, image_dims, size)

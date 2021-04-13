@@ -45,6 +45,7 @@ def parse_args():
 
 
 # size_after_reshape = 320
+lookahead_param = True
 use_sampler = True
 use_adaptive_sampler = False
 # size = 1024
