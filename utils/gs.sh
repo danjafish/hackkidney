@@ -8,7 +8,11 @@ NOT_EMPTY_RATIO=(0.5)
 EPOCHS=(30 40 50)
 BS=(32)
 MAX_LR=(0.0002 0.0007)
+for loss_weights in "${LOSS_WEIGHTS[@]}" ; do
+    echo $loss_weights
+    python3 e.py --loss_weights="$loss_weights"
 
+done
 
 for size in ${SIZE[@]} ; do
     for size_after_reshape in ${SIZE_AFTER_RESHAPE[@]} ; do
@@ -18,7 +22,7 @@ for size in ${SIZE[@]} ; do
                     for epochs in ${EPOCHS[@]} ; do 
                         for bs in ${BS[@]} ; do
                             for max_lr in ${MAX_LR[@]} ; do
-                                echo $size $size_after_reshape $step_size_ratio $loss_weights $not_empty_ratis $epochs $bs $max_lr
+                                python3 e.py --size=$size --size_after_reshape=$size_after_reshape --step_size_ratio=$step_size_ratio --loss_weights="$loss_weights" --not_empty_ratis=$not_empty_ratis --epochs=$epochs --bs=$bs --max_lr=$max_lr
                             done
                         done
                     done
@@ -28,5 +32,3 @@ for size in ${SIZE[@]} ; do
     done
 
 done
-
-
