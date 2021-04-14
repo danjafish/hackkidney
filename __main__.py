@@ -22,7 +22,8 @@ if __name__ == '__main__':
     epochs = args.epochs
     encoder = args.encoder
     bs = args.bs
-    prefix = 'unet_pp_'+encoder
+    seg_model_name = args.seg_model_name
+    prefix = seg_model_name + f'_{encoder}'
     max_lr = args.max_lr
     thr = args.thr
     # fp16 = args.fp16
@@ -45,7 +46,7 @@ if __name__ == '__main__':
         s += str(weights[weight])
         s += '-'
         val_index_print = ''.join([str(x) + ',' for x in val_index])
-        model_name = f'{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{val_index_print[:-1]}_cutmix_{cutmix}'
+        model_name = f'{prefix}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{max_lr}_{val_index_print[:-1]}_cutmix_{cutmix}'
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
@@ -89,8 +90,19 @@ if __name__ == '__main__':
     valloader = DataLoader(val_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     x, y, key = train_dataset[10]
     print(len(trainloader), len(valloader))
-    model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
-                            decoder_use_batchnorm=False).cuda()
+    if model_name == 'unet':
+        model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                         decoder_use_batchnorm=False).cuda()
+    elif model_name == 'unet++':
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                                 decoder_use_batchnorm=False).cuda()
+    elif model_name == 'albunet':
+        from nn.trainer import AlbuNet
+        model = AlbuNet(num_classes=1, pretrained=True).cuda()
+    else:
+        print('Model name is incorrect. Set to unet++')
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                                 decoder_use_batchnorm=False).cuda()
     if parallel:
         model = DataParallel(model).cuda()
 

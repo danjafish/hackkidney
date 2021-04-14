@@ -44,6 +44,7 @@ def parse_args():
     parser.add_argument('--overlap', dest='overlap', action='store_true', default=False)
     parser.add_argument('--not-predict', dest='predict', action='store_false')
     parser.add_argument('--best-dice-epochs', nargs='+', required=False)
+    parser.add_argument('--seg-model-name', type=str, default='unet++')
     parser.set_defaults(best_dice_epochs=[0, 0, 0])
     parser.set_defaults(train=True)
     parser.set_defaults(predict=True)
