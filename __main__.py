@@ -90,13 +90,13 @@ if __name__ == '__main__':
     valloader = DataLoader(val_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     x, y, key = train_dataset[10]
     print(len(trainloader), len(valloader))
-    if model_name == 'unet':
+    if seg_model_name == 'unet':
         model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                          decoder_use_batchnorm=False).cuda()
-    elif model_name == 'unet++':
+    elif seg_model_name == 'unet++':
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                                  decoder_use_batchnorm=False).cuda()
-    elif model_name == 'albunet':
+    elif seg_model_name == 'albunet':
         from nn.trainer import AlbuNet
         model = AlbuNet(num_classes=1, pretrained=True).cuda()
     else:
