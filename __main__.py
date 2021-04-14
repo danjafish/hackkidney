@@ -91,12 +91,15 @@ if __name__ == '__main__':
     x, y, key = train_dataset[10]
     print(len(trainloader), len(valloader))
     if seg_model_name == 'unet':
+        print('Use unet model')
         model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                          decoder_use_batchnorm=False).cuda()
     elif seg_model_name == 'unet++':
+        print('Use unet++ model')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                                  decoder_use_batchnorm=False).cuda()
     elif seg_model_name == 'albunet':
+        print('Use albunet model')
         from nn.trainer import AlbuNet
         model = AlbuNet(num_classes=1, pretrained=True).cuda()
     else:
