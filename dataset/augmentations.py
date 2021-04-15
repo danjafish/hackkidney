@@ -55,7 +55,9 @@ class CutMix:
 
 
 def get_augs(new_augs, size, size_after_reshape):
-    ALBUMENTATIONS_VAL = albu.Compose([albu.Resize(size_after_reshape, size_after_reshape)])
+    ALBUMENTATIONS_VAL = albu.Compose([albu.Normalize(mean=[0.485, 0.456, 0.406],
+                                                      std=[0.229, 0.224, 0.225], max_pixel_value=255.0, p=1.0),
+                                       albu.Resize(size_after_reshape, size_after_reshape)])
     if not new_augs:
         ALBUMENTATIONS_TRAIN = albu.Compose([
             albu.HorizontalFlip(),
@@ -104,6 +106,7 @@ def get_augs(new_augs, size, size_after_reshape):
                 albu.CLAHE(clip_limit=2),
                 albu.RandomGamma(),
             ], p=0.5),
+            albu.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], max_pixel_value=255.0, p=1.0),
             albu.Resize(size_after_reshape, size_after_reshape),
         ])
     return ALBUMENTATIONS_TRAIN, ALBUMENTATIONS_VAL
