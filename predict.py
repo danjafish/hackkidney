@@ -98,7 +98,8 @@ if __name__ == '__main__':
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size,
                                   overlap, step_size)
-                bled_masks[n] += np.round(mask, 4) / len(best_dice_epochs)
+                print(np.sum(mask))
+                bled_masks[n] += np.round(mask, 8) / len(best_dice_epochs)
         all_enc = []
         del X_test_images
         gc.collect()
@@ -120,4 +121,4 @@ if __name__ == '__main__':
         if not cros_val:
             sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap_{overlap}.csv', index=False)
         else:
-            sample_sub.to_csv(f'../{model_path}/mean_{model_path}_fold_{fold}_{s}_overlap_{overlap}.csv', index=False)
+            sample_sub.to_csv(f'../{model_path}/mean_{model_path}_fold_{fold}_{s}_overlap_{overlap}_t_{thr}.csv', index=False)
