@@ -30,6 +30,7 @@ if __name__ == '__main__':
     store_masks = args.store_masks
     cros_val = args.cros_val
     model_name = args.model_name
+    seg_model_name = args.seg_model_name
     parallel = args.parallel
     overlap = True
 
@@ -39,12 +40,18 @@ if __name__ == '__main__':
     seed_everything(2021)
     data_path = '../data/'
     data = pd.read_csv(data_path + 'train.csv')
-    if model_name == 'unet':
+    if seg_model_name == 'unet':
+        print('Use unet model')
         model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                          decoder_use_batchnorm=False).cuda()
-    elif model_name == 'unet++':
+    elif seg_model_name == 'unet++':
+        print('Use unet++ model')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                                  decoder_use_batchnorm=False).cuda()
+    elif seg_model_name == 'albunet':
+        print('Use albunet model')
+        from nn.trainer import AlbuNet
+        model = AlbuNet(num_classes=1, pretrained=True).cuda()
     else:
         print('Model name is incorrect. Set to unet++')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,

@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--model-name', type=str, default='unet++')
     parser.add_argument('--cros-val', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
+    parser.add_argument('--seg-model-name', type=str, default='unet++')
     return parser.parse_args()
 
 
