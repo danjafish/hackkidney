@@ -29,7 +29,6 @@ if __name__ == '__main__':
     model_path = args.model_path
     store_masks = args.store_masks
     cros_val = args.cros_val
-    model_name = args.model_name
     seg_model_name = args.seg_model_name
     parallel = args.parallel
     overlap = True
