@@ -6,9 +6,9 @@ from pretrainedmodels.models.xception import Xception
 from torch.utils import model_zoo
 from nn.zoo.densenet import densenet121, densenet169, densenet161
 
-from zoo import resnet
-from zoo.dpn import dpn92
-from zoo.senet import se_resnext50_32x4d, se_resnext101_32x4d, SCSEModule, senet154
+from nn.zoo import resnet
+from nn.zoo.dpn import dpn92
+from nn.zoo.senet import se_resnext50_32x4d, se_resnext101_32x4d, SCSEModule, senet154
 
 encoder_params = {
 

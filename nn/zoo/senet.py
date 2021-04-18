@@ -8,7 +8,7 @@ import math
 
 import torch
 import torch.nn as nn
-from torch.utils import model_zoo
+
 
 #from sync_batchnorm import SynchronizedBatchNorm2d as BatchNorm2d
 from torch.nn import BatchNorm2d
