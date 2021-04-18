@@ -4,7 +4,7 @@ from functools import partial
 
 from pretrainedmodels.models.xception import Xception
 from torch.utils import model_zoo
-from zoo.densenet import densenet121, densenet169, densenet161
+from nn.zoo.densenet import densenet121, densenet169, densenet161
 
 from zoo import resnet
 from zoo.dpn import dpn92
