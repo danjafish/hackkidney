@@ -5,7 +5,6 @@ many ideas from another PyTorch implementation https://github.com/oyam/pytorch-D
 This implementation is compatible with the pretrained weights
 from cypw's MXNet implementation.
 """
-import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,92 +14,111 @@ from collections import OrderedDict
 __all__ = ['DPN', 'dpn68', 'dpn68b', 'dpn92', 'dpn98', 'dpn131', 'dpn107']
 
 pretrained_settings = {
-    'dpn68': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn68-66bebafa7.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [124 / 255, 117 / 255, 104 / 255],
-            'std': [1 / (.0167 * 255)] * 3,
-            'num_classes': 1000
-        }
-    },
-    'dpn68b': {
-        'imagenet+5k': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn68b_extra-84854c156.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [124 / 255, 117 / 255, 104 / 255],
-            'std': [1 / (.0167 * 255)] * 3,
-            'num_classes': 1000
-        }
-    },
-    'dpn92': {
-        # 'imagenet': {
-        #     'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn68-66bebafa7.pth',
-        #     'input_space': 'RGB',
-        #     'input_size': [3, 224, 224],
-        #     'input_range': [0, 1],
-        #     'mean': [124 / 255, 117 / 255, 104 / 255],
-        #     'std': [1 / (.0167 * 255)] * 3,
-        #     'num_classes': 1000
-        # },
-        'imagenet+5k': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn92_extra-b040e4a9b.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [124 / 255, 117 / 255, 104 / 255],
-            'std': [1 / (.0167 * 255)] * 3,
-            'num_classes': 1000
-        }
-    },
-    'dpn98': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn98-5b90dec4d.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [124 / 255, 117 / 255, 104 / 255],
-            'std': [1 / (.0167 * 255)] * 3,
-            'num_classes': 1000
-        }
-    },
-    'dpn131': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn131-71dfe43e0.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [124 / 255, 117 / 255, 104 / 255],
-            'std': [1 / (.0167 * 255)] * 3,
-            'num_classes': 1000
-        }
-    },
-    'dpn107': {
-        'imagenet+5k': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn107_extra-1ac7121e2.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [124 / 255, 117 / 255, 104 / 255],
-            'std': [1 / (.0167 * 255)] * 3,
-            'num_classes': 1000
-        }
-    }
+    'dpn68':
+        {
+            'imagenet':
+                {
+                    'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn68-66bebafa7.pth',
+                    'input_space': 'RGB',
+                    'input_size': [3, 224, 224],
+                    'input_range': [0, 1],
+                    'mean': [124 / 255, 117 / 255, 104 / 255],
+                    'std': [1 / (0.0167 * 255)] * 3,
+                    'num_classes': 1000,
+                }
+        },
+    'dpn68b':
+        {
+            'imagenet+5k':
+                {
+                    'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn68b_extra-84854c156.pth',
+                    'input_space': 'RGB',
+                    'input_size': [3, 224, 224],
+                    'input_range': [0, 1],
+                    'mean': [124 / 255, 117 / 255, 104 / 255],
+                    'std': [1 / (0.0167 * 255)] * 3,
+                    'num_classes': 1000,
+                }
+        },
+    'dpn92':
+        {
+            # 'imagenet': {
+            #     'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn68-66bebafa7.pth',
+            #     'input_space': 'RGB',
+            #     'input_size': [3, 224, 224],
+            #     'input_range': [0, 1],
+            #     'mean': [124 / 255, 117 / 255, 104 / 255],
+            #     'std': [1 / (.0167 * 255)] * 3,
+            #     'num_classes': 1000
+            # },
+            'imagenet+5k':
+                {
+                    'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn92_extra-b040e4a9b.pth',
+                    'input_space': 'RGB',
+                    'input_size': [3, 224, 224],
+                    'input_range': [0, 1],
+                    'mean': [124 / 255, 117 / 255, 104 / 255],
+                    'std': [1 / (0.0167 * 255)] * 3,
+                    'num_classes': 1000,
+                }
+        },
+    'dpn98':
+        {
+            'imagenet':
+                {
+                    'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn98-5b90dec4d.pth',
+                    'input_space': 'RGB',
+                    'input_size': [3, 224, 224],
+                    'input_range': [0, 1],
+                    'mean': [124 / 255, 117 / 255, 104 / 255],
+                    'std': [1 / (0.0167 * 255)] * 3,
+                    'num_classes': 1000,
+                }
+        },
+    'dpn131':
+        {
+            'imagenet':
+                {
+                    'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn131-71dfe43e0.pth',
+                    'input_space': 'RGB',
+                    'input_size': [3, 224, 224],
+                    'input_range': [0, 1],
+                    'mean': [124 / 255, 117 / 255, 104 / 255],
+                    'std': [1 / (0.0167 * 255)] * 3,
+                    'num_classes': 1000,
+                }
+        },
+    'dpn107':
+        {
+            'imagenet+5k':
+                {
+                    'url': 'http://data.lip6.fr/cadene/pretrainedmodels/dpn107_extra-1ac7121e2.pth',
+                    'input_space': 'RGB',
+                    'input_size': [3, 224, 224],
+                    'input_range': [0, 1],
+                    'mean': [124 / 255, 117 / 255, 104 / 255],
+                    'std': [1 / (0.0167 * 255)] * 3,
+                    'num_classes': 1000,
+                }
+        },
 }
+
 
 def dpn68(num_classes=1000, pretrained='imagenet'):
     model = DPN(
-        small=True, num_init_features=10, k_r=128, groups=32,
-        k_sec=(3, 4, 12, 3), inc_sec=(16, 32, 32, 64),
-        num_classes=num_classes, test_time_pool=True)
+        small=True,
+        num_init_features=10,
+        k_r=128,
+        groups=32,
+        k_sec=(3, 4, 12, 3),
+        inc_sec=(16, 32, 32, 64),
+        num_classes=num_classes,
+        test_time_pool=True,
+    )
     if pretrained:
         settings = pretrained_settings['dpn68'][pretrained]
-        assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+        assert (num_classes == settings['num_classes']
+               ), 'num_classes should be {}, but is {}'.format(settings['num_classes'], num_classes)
 
         model.load_state_dict(model_zoo.load_url(settings['url']))
         model.input_space = settings['input_space']
@@ -109,16 +127,24 @@ def dpn68(num_classes=1000, pretrained='imagenet'):
         model.mean = settings['mean']
         model.std = settings['std']
     return model
+
 
 def dpn68b(num_classes=1000, pretrained='imagenet+5k'):
     model = DPN(
-        small=True, num_init_features=10, k_r=128, groups=32,
-        b=True, k_sec=(3, 4, 12, 3), inc_sec=(16, 32, 32, 64),
-        num_classes=num_classes, test_time_pool=True)
+        small=True,
+        num_init_features=10,
+        k_r=128,
+        groups=32,
+        b=True,
+        k_sec=(3, 4, 12, 3),
+        inc_sec=(16, 32, 32, 64),
+        num_classes=num_classes,
+        test_time_pool=True,
+    )
     if pretrained:
         settings = pretrained_settings['dpn68b'][pretrained]
-        assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+        assert (num_classes == settings['num_classes']
+               ), 'num_classes should be {}, but is {}'.format(settings['num_classes'], num_classes)
 
         model.load_state_dict(model_zoo.load_url(settings['url']))
         model.input_space = settings['input_space']
@@ -127,34 +153,46 @@ def dpn68b(num_classes=1000, pretrained='imagenet+5k'):
         model.mean = settings['mean']
         model.std = settings['std']
     return model
+
 
 def dpn92(num_classes=1000, pretrained='imagenet+5k'):
     model = DPN(
-        num_init_features=64, k_r=96, groups=32,
-        k_sec=(3, 4, 20, 3), inc_sec=(16, 32, 24, 128),
-        num_classes=num_classes, test_time_pool=True)
+        num_init_features=64,
+        k_r=96,
+        groups=32,
+        k_sec=(3, 4, 20, 3),
+        inc_sec=(16, 32, 24, 128),
+        num_classes=num_classes,
+        test_time_pool=True,
+    )
     if pretrained:
         settings = pretrained_settings['dpn92'][pretrained]
-        assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+        assert (num_classes == settings['num_classes']
+               ), 'num_classes should be {}, but is {}'.format(settings['num_classes'], num_classes)
 
-        #model.load_state_dict(model_zoo.load_url(settings['url']))
+        # model.load_state_dict(model_zoo.load_url(settings['url']))
         model.input_space = settings['input_space']
         model.input_size = settings['input_size']
         model.input_range = settings['input_range']
         model.mean = settings['mean']
         model.std = settings['std']
     return model
+
 
 def dpn98(num_classes=1000, pretrained='imagenet'):
     model = DPN(
-        num_init_features=96, k_r=160, groups=40,
-        k_sec=(3, 6, 20, 3), inc_sec=(16, 32, 32, 128),
-        num_classes=num_classes, test_time_pool=True)
+        num_init_features=96,
+        k_r=160,
+        groups=40,
+        k_sec=(3, 6, 20, 3),
+        inc_sec=(16, 32, 32, 128),
+        num_classes=num_classes,
+        test_time_pool=True,
+    )
     if pretrained:
         settings = pretrained_settings['dpn98'][pretrained]
-        assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+        assert (num_classes == settings['num_classes']
+               ), 'num_classes should be {}, but is {}'.format(settings['num_classes'], num_classes)
 
         model.load_state_dict(model_zoo.load_url(settings['url']))
         model.input_space = settings['input_space']
@@ -163,16 +201,22 @@ def dpn98(num_classes=1000, pretrained='imagenet'):
         model.mean = settings['mean']
         model.std = settings['std']
     return model
+
 
 def dpn131(num_classes=1000, pretrained='imagenet'):
     model = DPN(
-        num_init_features=128, k_r=160, groups=40,
-        k_sec=(4, 8, 28, 3), inc_sec=(16, 32, 32, 128),
-        num_classes=num_classes, test_time_pool=True)
+        num_init_features=128,
+        k_r=160,
+        groups=40,
+        k_sec=(4, 8, 28, 3),
+        inc_sec=(16, 32, 32, 128),
+        num_classes=num_classes,
+        test_time_pool=True,
+    )
     if pretrained:
         settings = pretrained_settings['dpn131'][pretrained]
-        assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+        assert (num_classes == settings['num_classes']
+               ), 'num_classes should be {}, but is {}'.format(settings['num_classes'], num_classes)
 
         model.load_state_dict(model_zoo.load_url(settings['url']))
         model.input_space = settings['input_space']
@@ -182,15 +226,21 @@ def dpn131(num_classes=1000, pretrained='imagenet'):
         model.std = settings['std']
     return model
 
+
 def dpn107(num_classes=1000, pretrained='imagenet+5k'):
     model = DPN(
-        num_init_features=128, k_r=200, groups=50,
-        k_sec=(4, 8, 20, 3), inc_sec=(20, 64, 64, 128),
-        num_classes=num_classes, test_time_pool=True)
+        num_init_features=128,
+        k_r=200,
+        groups=50,
+        k_sec=(4, 8, 20, 3),
+        inc_sec=(20, 64, 64, 128),
+        num_classes=num_classes,
+        test_time_pool=True,
+    )
     if pretrained:
         settings = pretrained_settings['dpn107'][pretrained]
-        assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+        assert (num_classes == settings['num_classes']
+               ), 'num_classes should be {}, but is {}'.format(settings['num_classes'], num_classes)
 
         model.load_state_dict(model_zoo.load_url(settings['url']))
         model.input_space = settings['input_space']
@@ -213,8 +263,16 @@ class CatBnAct(nn.Module):
 
 
 class BnActConv2d(nn.Module):
-    def __init__(self, in_chs, out_chs, kernel_size, stride,
-                 padding=0, groups=1, activation_fn=nn.ReLU(inplace=True)):
+    def __init__(
+        self,
+        in_chs,
+        out_chs,
+        kernel_size,
+        stride,
+        padding=0,
+        groups=1,
+        activation_fn=nn.ReLU(inplace=True),
+    ):
         super(BnActConv2d, self).__init__()
         self.bn = nn.BatchNorm2d(in_chs, eps=0.001)
         self.act = activation_fn
@@ -225,11 +283,22 @@ class BnActConv2d(nn.Module):
 
 
 class InputBlock(nn.Module):
-    def __init__(self, num_init_features, kernel_size=7,
-                 padding=3, activation_fn=nn.ReLU(inplace=True)):
+    def __init__(
+        self,
+        num_init_features,
+        kernel_size=7,
+        padding=3,
+        activation_fn=nn.ReLU(inplace=True),
+    ):
         super(InputBlock, self).__init__()
         self.conv = nn.Conv2d(
-            4, num_init_features, kernel_size=kernel_size, stride=2, padding=padding, bias=False)
+            4,
+            num_init_features,
+            kernel_size=kernel_size,
+            stride=2,
+            padding=padding,
+            bias=False,
+        )
         self.bn = nn.BatchNorm2d(num_init_features, eps=0.001)
         self.act = activation_fn
         self.pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -244,7 +313,16 @@ class InputBlock(nn.Module):
 
 class DualPathBlock(nn.Module):
     def __init__(
-            self, in_chs, num_1x1_a, num_3x3_b, num_1x1_c, inc, groups, block_type='normal', b=False):
+        self,
+        in_chs,
+        num_1x1_a,
+        num_3x3_b,
+        num_1x1_c,
+        inc,
+        groups,
+        block_type='normal',
+        b=False,
+    ):
         super(DualPathBlock, self).__init__()
         self.num_1x1_c = num_1x1_c
         self.inc = inc
@@ -263,15 +341,18 @@ class DualPathBlock(nn.Module):
         if self.has_proj:
             # Using different member names here to allow easier parameter key matching for conversion
             if self.key_stride == 2:
-                self.c1x1_w_s2 = BnActConv2d(
-                    in_chs=in_chs, out_chs=num_1x1_c + 2 * inc, kernel_size=1, stride=2)
+                self.c1x1_w_s2 = BnActConv2d(in_chs=in_chs, out_chs=num_1x1_c + 2 * inc, kernel_size=1, stride=2)
             else:
-                self.c1x1_w_s1 = BnActConv2d(
-                    in_chs=in_chs, out_chs=num_1x1_c + 2 * inc, kernel_size=1, stride=1)
+                self.c1x1_w_s1 = BnActConv2d(in_chs=in_chs, out_chs=num_1x1_c + 2 * inc, kernel_size=1, stride=1)
         self.c1x1_a = BnActConv2d(in_chs=in_chs, out_chs=num_1x1_a, kernel_size=1, stride=1)
         self.c3x3_b = BnActConv2d(
-            in_chs=num_1x1_a, out_chs=num_3x3_b, kernel_size=3,
-            stride=self.key_stride, padding=1, groups=groups)
+            in_chs=num_1x1_a,
+            out_chs=num_3x3_b,
+            kernel_size=3,
+            stride=self.key_stride,
+            padding=1,
+            groups=groups,
+        )
         if b:
             self.c1x1_c = CatBnAct(in_chs=num_3x3_b)
             self.c1x1_c1 = nn.Conv2d(num_3x3_b, num_1x1_c, kernel_size=1, bias=False)
@@ -307,9 +388,18 @@ class DualPathBlock(nn.Module):
 
 
 class DPN(nn.Module):
-    def __init__(self, small=False, num_init_features=64, k_r=96, groups=32,
-                 b=False, k_sec=(3, 4, 20, 3), inc_sec=(16, 32, 24, 128),
-                 num_classes=1000, test_time_pool=False):
+    def __init__(
+        self,
+        small=False,
+        num_init_features=64,
+        k_r=96,
+        groups=32,
+        b=False,
+        k_sec=(3, 4, 20, 3),
+        inc_sec=(16, 32, 24, 128),
+        num_classes=1000,
+        test_time_pool=False,
+    ):
         super(DPN, self).__init__()
         self.test_time_pool = test_time_pool
         self.b = b
@@ -392,6 +482,7 @@ class DPN(nn.Module):
         x = self.logits(x)
         return x
 
+
 """ PyTorch selectable adaptive pooling
 Adaptive pooling with the ability to select the type of pooling from:
     * 'avg' - Average pooling
@@ -402,6 +493,7 @@ Both a functional and a nn.Module version of the pooling is provided.
 Author: Ross Wightman (rwightman)
 """
 
+
 def pooling_factor(pool_type='avg'):
     return 2 if pool_type == 'avgmaxc' else 1
 
@@ -410,14 +502,25 @@ def adaptive_avgmax_pool2d(x, pool_type='avg', padding=0, count_include_pad=Fals
     """Selectable global pooling function with dynamic input kernel size
     """
     if pool_type == 'avgmaxc':
-        x = torch.cat([
-            F.avg_pool2d(
-                x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad),
-            F.max_pool2d(x, kernel_size=(x.size(2), x.size(3)), padding=padding)
-        ], dim=1)
+        x = torch.cat(
+            [
+                F.avg_pool2d(
+                    x,
+                    kernel_size=(x.size(2), x.size(3)),
+                    padding=padding,
+                    count_include_pad=count_include_pad,
+                ),
+                F.max_pool2d(x, kernel_size=(x.size(2), x.size(3)), padding=padding),
+            ],
+            dim=1,
+        )
     elif pool_type == 'avgmax':
         x_avg = F.avg_pool2d(
-                x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad)
+            x,
+            kernel_size=(x.size(2), x.size(3)),
+            padding=padding,
+            count_include_pad=count_include_pad,
+        )
         x_max = F.max_pool2d(x, kernel_size=(x.size(2), x.size(3)), padding=padding)
         x = 0.5 * (x_avg + x_max)
     elif pool_type == 'max':
@@ -426,13 +529,18 @@ def adaptive_avgmax_pool2d(x, pool_type='avg', padding=0, count_include_pad=Fals
         if pool_type != 'avg':
             print('Invalid pool type %s specified. Defaulting to average pooling.' % pool_type)
         x = F.avg_pool2d(
-            x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad)
+            x,
+            kernel_size=(x.size(2), x.size(3)),
+            padding=padding,
+            count_include_pad=count_include_pad,
+        )
     return x
 
 
 class AdaptiveAvgMaxPool2d(torch.nn.Module):
     """Selectable global pooling layer with dynamic input kernel size
     """
+
     def __init__(self, output_size=1, pool_type='avg'):
         super(AdaptiveAvgMaxPool2d, self).__init__()
         self.output_size = output_size
@@ -459,11 +567,7 @@ class AdaptiveAvgMaxPool2d(torch.nn.Module):
         return pooling_factor(self.pool_type)
 
     def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-               + 'output_size=' + str(self.output_size) \
-               + ', pool_type=' + self.pool_type + ')'
-
-if __name__ == "__main__":
-    model = dpn131()
-    print(model.features, len(model.features))
-    print(model.features[2])
+        return (
+            self.__class__.__name__ + ' (' + 'output_size=' + str(self.output_size) + ', pool_type=' + self.pool_type +
+            ')'
+        )
