@@ -20,15 +20,16 @@ def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=Tru
     pred_keys = []
     train_loss = 0
     model = model.train();
-    loss = CrossEntropyLoss()
+    loss = BCEWithLogitsLoss()
     for i, (x, y_true, key) in enumerate(trainloader):
         x = x.permute((0, 3, 1, 2)).cuda().float()
-        y_true = y_true.cuda().long()
+        #y_true = y_true.cuda().long()
+        y_true = y_true.permute((0, 3, 1, 2)).cuda().float()
         y_pred = model(x)
         pred_keys.extend((k1, k2, k3) for k1, k2, k3 in
                          zip(key[0].numpy(), key[1].numpy(), key[2].numpy()))
         big_masks = interpolate(y_pred, (size, size))
-        big_ground_true = interpolate(y_true.float(), (size, size, 2))
+        big_ground_true = interpolate(y_true.float(), (size,size))
         l = loss(y_pred, y_true)
         optim.zero_grad()
         if fp16:
@@ -42,8 +43,9 @@ def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=Tru
                                    big_ground_true.detach().cpu().numpy()):
             if store_train_masks:
                 final_masks.append(pred)
-            pred = np.argmax(pred, axis=2)
-            train_dice += dice_score(mask_tresholed(pred), true_mask) / x.shape[0]
+            pred = np.argmax(pred, axis=0)
+            true_mask = np.argmax(true_mask, axis=0)
+            train_dice += dice_score(pred, true_mask) / x.shape[0]
         train_loss += l.item() / len(trainloader)
     return model, optim, pred_keys, final_masks, train_loss, train_dice / len(trainloader)
 
@@ -52,17 +54,18 @@ def val_one_epoch(model, optim, valloader, size, loss):
     val_masks = []
     val_keys = []
     val_loss = 0.0
+    loss = BCEWithLogitsLoss()
     with torch.no_grad():
         model = model.eval();
         for i, (x, y_true, key) in enumerate(valloader):
             x = x.permute((0, 3, 1, 2))
             x = x.cuda().float()
-            y_true = y_true.cuda().long()
+            y_true = y_true.permute((0, 3, 1, 2)).cuda().float()
             y_pred = model(x)  # [:,0]
-            big_masks = interpolate(y_pred, (size, size, 2))
+            big_masks = interpolate(y_pred, (size, size))
             # big_ground_true = interpolate(y_true, (size, size))
             for pred in torch.sigmoid(big_masks).detach().cpu().numpy():
-                pred = np.argmax(pred, axis=2)
+                pred = np.argmax(pred, axis=0)
                 val_masks.append(pred)
 
             val_keys.extend((k1, k2, k3) for k1, k2, k3 in
