@@ -1,6 +1,7 @@
 from torch.nn.functional import interpolate
 import torch
 from torch import sigmoid, no_grad, save, load
+from torch.nn import CrossEntropyLoss
 from utils.support_func import dice_score, mask_tresholed
 from config import fp16
 import apex
@@ -19,6 +20,7 @@ def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=Tru
     pred_keys = []
     train_loss = 0
     model = model.train();
+    loss = CrossEntropyLoss()
     for i, (x, y_true, key) in enumerate(trainloader):
         x = x.permute((0, 3, 1, 2)).cuda().float()
         y_true = y_true.cuda().float()
