@@ -13,6 +13,7 @@ import tifffile as tiff
 from torch.optim import AdamW, Adam
 from torch.nn import BCEWithLogitsLoss, DataParallel
 import os
+from nn.zoo.unet import SCSEUnet
 import apex
 import h5py
 
@@ -102,6 +103,9 @@ if __name__ == '__main__':
         print('Use albunet model')
         from nn.trainer import AlbuNet
         model = AlbuNet(num_classes=1, pretrained=True).cuda()
+    elif seg_model_name == 'scseunet':
+        print('Use SCSEUnet model')
+        model = SCSEUnet(seg_classes=1)
     else:
         print('Model name is incorrect. Set to unet++')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,

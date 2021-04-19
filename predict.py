@@ -29,7 +29,7 @@ if __name__ == '__main__':
     model_path = args.model_path
     store_masks = args.store_masks
     cros_val = args.cros_val
-    model_name = args.model_name
+    seg_model_name = args.seg_model_name
     parallel = args.parallel
     overlap = True
 
@@ -39,12 +39,18 @@ if __name__ == '__main__':
     seed_everything(2021)
     data_path = '../data/'
     data = pd.read_csv(data_path + 'train.csv')
-    if model_name == 'unet':
+    if seg_model_name == 'unet':
+        print('Use unet model')
         model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                          decoder_use_batchnorm=False).cuda()
-    elif model_name == 'unet++':
+    elif seg_model_name == 'unet++':
+        print('Use unet++ model')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
                                  decoder_use_batchnorm=False).cuda()
+    elif seg_model_name == 'albunet':
+        print('Use albunet model')
+        from nn.trainer import AlbuNet
+        model = AlbuNet(num_classes=1, pretrained=True).cuda()
     else:
         print('Model name is incorrect. Set to unet++')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
@@ -91,7 +97,8 @@ if __name__ == '__main__':
             for n in range(len(sample_sub)):
                 mask = make_masks(test_keys, test_masks, n, img_dims_test, size,
                                   overlap, step_size)
-                bled_masks[n] += np.round(mask, 4) / len(best_dice_epochs)
+                print(np.sum(mask))
+                bled_masks[n] += np.round(mask, 8) / len(best_dice_epochs)
         all_enc = []
         del X_test_images
         gc.collect()
@@ -113,4 +120,4 @@ if __name__ == '__main__':
         if not cros_val:
             sample_sub.to_csv(f'../{model_path}/mean_{model_path}_{s}_overlap_{overlap}.csv', index=False)
         else:
-            sample_sub.to_csv(f'../{model_path}/mean_{model_path}_fold_{fold}_{s}_overlap_{overlap}.csv', index=False)
+            sample_sub.to_csv(f'../{model_path}/mean_{model_path}_fold_{fold}_{s}_overlap_{overlap}_t_{thr}.csv', index=False)
