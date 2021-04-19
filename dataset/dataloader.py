@@ -147,7 +147,7 @@ class KidneyLoader(Dataset):
             aug = self.ALBUMENTATIONS_VAL(image=piece, mask=mask)
             piece = aug['image']
             mask = aug['mask']
-        return piece, np.expand_dims(mask, axis=0), self.ids[idx]
+        return piece, mask, self.ids[idx]
 
     def __len__(self):
         return len(self.ids)

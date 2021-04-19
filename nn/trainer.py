@@ -23,12 +23,12 @@ def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=Tru
     loss = CrossEntropyLoss()
     for i, (x, y_true, key) in enumerate(trainloader):
         x = x.permute((0, 3, 1, 2)).cuda().float()
-        y_true = y_true.cuda().float()
+        y_true = y_true.cuda().long()
         y_pred = model(x)
         pred_keys.extend((k1, k2, k3) for k1, k2, k3 in
                          zip(key[0].numpy(), key[1].numpy(), key[2].numpy()))
         big_masks = interpolate(y_pred, (size, size))
-        big_ground_true = interpolate(y_true, (size, size,2))
+        big_ground_true = interpolate(y_true.float(), (size, size, 2))
         l = loss(y_pred, y_true)
         optim.zero_grad()
         if fp16:
@@ -57,7 +57,7 @@ def val_one_epoch(model, optim, valloader, size, loss):
         for i, (x, y_true, key) in enumerate(valloader):
             x = x.permute((0, 3, 1, 2))
             x = x.cuda().float()
-            y_true = y_true.cuda().float()
+            y_true = y_true.cuda().long()
             y_pred = model(x)  # [:,0]
             big_masks = interpolate(y_pred, (size, size, 2))
             # big_ground_true = interpolate(y_true, (size, size))
