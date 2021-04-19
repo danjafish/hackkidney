@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torch.nn import NLLLoss
 from torch.autograd import Variable
 import math
 from torch.optim.optimizer import Optimizer, required
@@ -305,7 +306,7 @@ class ComboLoss(nn.Module):
     def __init__(self, weights, per_image=False, channel_weights=[1, 1, 1], channel_losses=None):
         super().__init__()
         self.weights = weights
-        self.ce = torch.nn.NLLLOSS()
+        self.ce = NLLLoss()
         self.bce = StableBCELoss()
         self.dice = DiceLoss(per_image=False)
         self.jaccard = JaccardLoss(per_image=False)
