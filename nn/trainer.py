@@ -6,6 +6,7 @@ from config import fp16
 import apex
 from torch.nn import BCEWithLogitsLoss
 from torch import nn
+import numpy as np
 from torch.nn import functional as F
 import torch
 from torchvision import models
@@ -39,6 +40,7 @@ def train_one_epoch(model, optim, trainloader, size, loss, store_train_masks=Tru
                                    big_ground_true.detach().cpu().numpy()):
             if store_train_masks:
                 final_masks.append(pred)
+            pred = np.argmax(pred, axis=2)
             train_dice += dice_score(mask_tresholed(pred), true_mask) / x.shape[0]
         train_loss += l.item() / len(trainloader)
     return model, optim, pred_keys, final_masks, train_loss, train_dice / len(trainloader)

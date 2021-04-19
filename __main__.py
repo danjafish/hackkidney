@@ -97,7 +97,7 @@ if __name__ == '__main__':
                          decoder_use_batchnorm=False).cuda()
     elif seg_model_name == 'unet++':
         print('Use unet++ model')
-        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=2,
                                  decoder_use_batchnorm=False).cuda()
     elif seg_model_name == 'albunet':
         print('Use albunet model')

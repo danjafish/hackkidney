@@ -305,6 +305,7 @@ class ComboLoss(nn.Module):
     def __init__(self, weights, per_image=False, channel_weights=[1, 1, 1], channel_losses=None):
         super().__init__()
         self.weights = weights
+        self.ce = torch.nn.NLLLOSS()
         self.bce = StableBCELoss()
         self.dice = DiceLoss(per_image=False)
         self.jaccard = JaccardLoss(per_image=False)
@@ -312,6 +313,7 @@ class ComboLoss(nn.Module):
         self.lovasz_sigmoid = LovaszLossSigmoid(per_image=per_image)
         self.focal = FocalLoss2d()
         self.mapping = {'bce': self.bce,
+                        'ce': self.ce,
                         'dice': self.dice,
                         'focal': self.focal,
                         'jaccard': self.jaccard,

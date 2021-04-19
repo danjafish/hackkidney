@@ -127,6 +127,10 @@ class KidneyLoader(Dataset):
 
     def __getitem__(self, idx):
         piece, mask = self.get_piece(idx)
+        new_mask = np.zeros((self.piece_dim, self.piece_dim, 2))
+        new_mask[:, :, 0][np.where(mask == 0)] = 1
+        new_mask[:, :, 1][np.where(mask == 1)] = 1
+        mask = new_mask
         if not self.val:
             if "cutmix" in self.augumentations:
                 source_rdm_idx = self.positive_idxs[np.random.randint(len(self.positive_idxs))]
@@ -143,7 +147,6 @@ class KidneyLoader(Dataset):
             aug = self.ALBUMENTATIONS_VAL(image=piece, mask=mask)
             piece = aug['image']
             mask = aug['mask']
-
         return piece, np.expand_dims(mask, axis=0), self.ids[idx]
 
     def __len__(self):
