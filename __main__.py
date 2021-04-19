@@ -41,7 +41,7 @@ if __name__ == '__main__':
     overlap = args.overlap
     parallel = args.parallel
     augumentations = ['albu', 'cutmix'] if cutmix else None
-    weights = {"bce": int(loss_weights[0]), "dice": int(loss_weights[1]), "focal": int(loss_weights[2])}
+    weights = {"ce": 1}
 
     for weight in weights:
         s += str(weights[weight])
@@ -125,7 +125,6 @@ if __name__ == '__main__':
             model,
             optim,
             opt_level='O1')
-    metric = smp.utils.losses.DiceLoss()
     SchedulerClass_cos = torch.optim.lr_scheduler.CosineAnnealingLR
     scheduler_params_cos = dict(
         T_max=epochs, eta_min=min_lr
