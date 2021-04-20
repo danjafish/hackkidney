@@ -251,8 +251,7 @@ s = 'w_'
 for weight in weights:
     s += str(weights[weight])
     s += '-'
-model_name = f'cross_val_{prefix}_{new_augs}_{fp16}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_cutmix_{cutmix}'
-
+model_name = f'cross_val_{prefix}_{s}_{size}_{step_size}_{size_after_reshape}_{bs}_{epochs}_{max_lr}_cutmix_{cutmix}'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_number)
 seed_everything(2021)
