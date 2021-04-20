@@ -1,6 +1,7 @@
 import pandas as pd
 from torch.cuda import empty_cache
 import numpy as np
+from nn.zoo.unet import SCSEUnet
 from torch.utils.data import DataLoader
 from config import use_sampler, use_adaptive_sampler, fp16, epochs_minlr, loss_name, predict_by_epochs, new_augs, parse_args
 from utils.support_func import *
@@ -35,8 +36,25 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
     valloader = DataLoader(val_dataset, batch_size=bs * 2, shuffle=False, num_workers=16)
     x, y, key = train_dataset[10]
     print(len(trainloader), len(valloader))
-    model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
-                             decoder_use_batchnorm=False).cuda()
+    if seg_model_name == 'unet':
+        print('Use unet model')
+        model = smp.Unet(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                         decoder_use_batchnorm=False).cuda()
+    elif seg_model_name == 'unet++':
+        print('Use unet++ model')
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                                 decoder_use_batchnorm=False).cuda()
+    elif seg_model_name == 'albunet':
+        print('Use albunet model')
+        from nn.trainer import AlbuNet
+        model = AlbuNet(num_classes=1, pretrained=True).cuda()
+    elif seg_model_name == 'scseunet':
+        print('Use SCSEUnet model')
+        model = SCSEUnet(seg_classes=1)
+    else:
+        print('Model name is incorrect. Set to unet++')
+        model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
+                                 decoder_use_batchnorm=False).cuda()
     if parallel:
         model = DataParallel(model).cuda()
 
@@ -214,6 +232,7 @@ max_lr = args.max_lr
  # fp16 = args.fp16
 min_lr = args.min_lr
 size = args.size
+seg_model_name = args.seg_model_name
 size_after_reshape = args.size_after_reshape
 step_size_ratio = args.step_size_ratio
 step_size = int(size * step_size_ratio)
