@@ -303,6 +303,9 @@ gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
 all_enc = []
 sum_masks = np.array(sum_masks)/k
+for j, mask in enumerate(sum_masks):
+    with h5py.File(f'../{model_name}/{model_name}_mask_{j}_cross_val.txt', "w") as f:
+        dset = f.create_dataset("mask", data=mask, dtype='f')
 for tt in range(2, 7):
     t = tt/10
     for mask in sum_masks:
