@@ -198,7 +198,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
                 for n in range(len(sample_sub)):
                     mask = make_masks(test_keys, test_masks, n, img_dims_test, size, overlap=overlap, step_size=step_size)
                     bled_masks[n] += mask / len(best_dice_epochs)
-            all_enc = []
+
             del X_test_images
             gc.collect()
             if store_masks:
@@ -207,6 +207,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
                         dset = f.create_dataset("mask", data=mask, dtype='f')
                     # np.savetxt(f'../{model_name}/{model_name}_mask_{j}.txt', mask)
             for tt in range(2, 7):
+                all_enc = []
                 t = tt/10
                 for mask in bled_masks:
                     mask[mask < t] = 0
@@ -300,13 +301,14 @@ for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
 del X_images_, Masks_, image_dims_
 gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
-all_enc = []
+
 sum_masks = np.array(sum_masks)/k
 for j, mask in enumerate(sum_masks):
     with h5py.File(f'../{model_name}/{model_name}_mask_{j}_cross_val.txt', "w") as f:
         dset = f.create_dataset("mask", data=mask, dtype='f')
 for tt in range(2, 7):
     t = tt/10
+    all_enc = []
     for mask in sum_masks:
         mask[mask < t] = 0
         mask[mask >= t] = 1
