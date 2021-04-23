@@ -105,7 +105,7 @@ if __name__ == '__main__':
         model = AlbuNet(num_classes=1, pretrained=True).cuda()
     elif seg_model_name == 'scseunet':
         print('Use SCSEUnet model')
-        model = SCSEUnet(seg_classes=1)
+        model = SCSEUnet(seg_classes=1).cuda()
     else:
         print('Model name is incorrect. Set to unet++')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
