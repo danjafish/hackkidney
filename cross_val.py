@@ -50,7 +50,7 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
         model = AlbuNet(num_classes=1, pretrained=True).cuda()
     elif seg_model_name == 'scseunet':
         print('Use SCSEUnet model')
-        model = SCSEUnet(seg_classes=1)
+        model = SCSEUnet(seg_classes=1).cuda()
     else:
         print('Model name is incorrect. Set to unet++')
         model = smp.UnetPlusPlus(encoder, encoder_weights="imagenet", in_channels=3, classes=1,
@@ -157,7 +157,18 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
         gc.collect()
     if predict:
         if not train:
-            best_dice_epochs = [(int(x), 1) for x in args.best_dice_epochs]
+            pass
+            # if fold == 0:
+            #     best_dice_epochs = [(34, 0.938852186919906), (39, 0.9393114299799262), (36, 0.9388174075553963), (38, 0.9389920761027962)]
+            # elif fold == 1:
+            #     best_dice_epochs = [(28, 0.9027552584839075), (36, 0.9033416557294215), (37, 0.9031257069334585), (38, 0.9029346479118595)]
+            # elif fold == 2:
+            #     best_dice_epochs = [(38, 0.9328974798970685), (33, 0.9329123230368631), (37, 0.9331401395093545), (39, 0.932692250874815)]
+            # elif fold == 3:
+            #     best_dice_epochs = [(31, 0.9388590937356484), (39, 0.9368731018176651), (30, 0.9372210758433651), (38, 0.9375657655754374)]
+            # elif fold == 4:
+            #     best_dice_epochs = [(37, 0.9372186165197486), (32, 0.9372384178794498), (36, 0.9372328533782275), (33, 0.9368665971919303)]
+
         sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
         test_paths = sample_sub.id.values
         print('Start test')
@@ -210,9 +221,10 @@ def train_fold(val_index, X_images, Masks, image_dims, fold, train=True, predict
                 all_enc = []
                 t = tt/10
                 for mask in bled_masks:
-                    mask[mask < t] = 0
-                    mask[mask >= t] = 1
-                    enc = mask2enc(mask)
+                    mask_c = mask.copy()
+                    mask_c[mask_c < t] = 0
+                    mask_c[mask_c >= t] = 1
+                    enc = mask2enc(mask_c)
                     all_enc.append(enc[0])
                 sample_sub.predicted = all_enc
                 s = ''.join([str(e[0]) + '_' for e in best_dice_epochs])[:-1]
@@ -288,7 +300,7 @@ for fold, (train_index, val_index_) in enumerate(kf.split(indexes)):
     print('Train fold ', fold, 'val indexes = ', val_index_)
     with open(f"../{model_name}/{model_name}.log", 'a+') as logger:
         logger.write(f'fold {fold} val index {val_index_}\n')
-    masks = train_fold(val_index_, X_images_, Masks_, image_dims_, fold)
+    masks = train_fold(val_index_, X_images_, Masks_, image_dims_, fold, train=train, predict=predict)
     if len(sum_masks) == 0:
         sum_masks = masks
     else:
@@ -302,7 +314,7 @@ del X_images_, Masks_, image_dims_
 gc.collect()
 sample_sub = pd.read_csv(data_path + 'sample_submission.csv')
 
-sum_masks = np.array(sum_masks)/k
+sum_masks = [np.array(mask)/k for mask in sum_masks]
 for j, mask in enumerate(sum_masks):
     with h5py.File(f'../{model_name}/{model_name}_mask_{j}_cross_val.txt', "w") as f:
         dset = f.create_dataset("mask", data=mask, dtype='f')
@@ -310,9 +322,10 @@ for tt in range(2, 7):
     t = tt/10
     all_enc = []
     for mask in sum_masks:
-        mask[mask < t] = 0
-        mask[mask >= t] = 1
-        enc = mask2enc(mask)
+        mask_c = mask.copy()
+        mask_c[mask_c < t] = 0
+        mask_c[mask_c >= t] = 1
+        enc = mask2enc(mask_c)
         all_enc.append(enc[0])
     sample_sub.predicted = all_enc
     sample_sub.to_csv(f'../{model_name}/{model_name}_t_{t}_overlap_{overlap}.csv', index=False)
